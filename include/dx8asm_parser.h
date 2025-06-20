@@ -10,6 +10,6 @@ typedef struct asm_program {
     asm_instr *code;
     size_t count, capacity;
 } asm_program;
-int  asm_parse(const char *src, asm_program *, char **err);
+int asm_parse(const char *src, asm_program *, char **err);
 void asm_program_free(asm_program *);
 #endif
