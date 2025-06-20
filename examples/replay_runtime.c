@@ -22,6 +22,9 @@ static void execute_cmds(const GLES_CommandList *cl) {
             glMatrixMode(c->u[0]);
             /* glLoadMatrixf(MVP); — app supplies */
             break;
+        case GLES_CMD_LOAD_CONSTANT:
+            glColor4f(c->f[0], c->f[1], c->f[2], c->f[3]);
+            break;
         default:
             break;
         }

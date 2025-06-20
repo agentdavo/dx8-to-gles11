@@ -88,6 +88,11 @@ static void xlate(const asm_instr *i, GLES_CommandList *o) {
     }
 
     if (!strcmp(i->opcode, "mov") && !strncmp(i->dst, "oT", 2)) {
+        if (i->dst[2] < '0' || i->dst[2] > '7') {
+            set_err("texture stage must be 0..7: %s", i->dst);
+            cl_push(o, (gles_cmd){.type = GLES_CMD_UNKNOWN});
+            return;
+        }
         unsigned stage = (unsigned)(i->dst[2] - '0');
         gles_cmd c = {.type = GLES_CMD_MULTITEXCOORD4F};
         c.u[0] = GL_TEXTURE0 + stage;
@@ -119,6 +124,15 @@ int dx8gles11_compile_file(const char *path, const dx8gles11_options *opt, GLES_
         set_err("parse error");
         free(src);
         return -3;
+    }
+    for (size_t c = 0; c < prog.const_count; ++c) {
+        gles_cmd cmd = {.type = GLES_CMD_LOAD_CONSTANT};
+        cmd.u[0] = prog.consts[c].idx;
+        cmd.f[0] = prog.consts[c].value[0];
+        cmd.f[1] = prog.consts[c].value[1];
+        cmd.f[2] = prog.consts[c].value[2];
+        cmd.f[3] = prog.consts[c].value[3];
+        cl_push(out, cmd);
     }
     for (size_t idx = 0; idx < prog.count; ++idx)
         xlate(&prog.code[idx], out);

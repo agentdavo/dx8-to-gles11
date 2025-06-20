@@ -6,9 +6,16 @@ typedef struct asm_instr {
     char opcode[8], dst[32], src0[32], src1[32];
 } asm_instr;
 
+typedef struct asm_constant {
+    unsigned idx;     /* cN register index */
+    float value[4];
+} asm_constant;
+
 typedef struct asm_program {
     asm_instr *code;
     size_t count, capacity;
+    asm_constant *consts;
+    size_t const_count, const_capacity;
 } asm_program;
 int asm_parse(const char *src, asm_program *, char **err);
 void asm_program_free(asm_program *);
