@@ -29,6 +29,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option(BUILD_EXAMPLES "Build replay_runtime example" ON)
+enable_testing()
 
 add_library(dx8gles11 STATIC
     src/preprocess.c
