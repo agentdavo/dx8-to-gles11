@@ -148,7 +148,26 @@ int dx8gles11_compile_file(const char *path, const dx8gles11_options *opt, GLES_
         return -2;
     }
 
-    int r = compile_from_source(src, out);
+    asm_program prog = {0};
+    if (asm_parse(src, &prog, NULL)) {
+        set_err("parse error");
+        free(src);
+        return -3;
+    }
+    for (size_t c = 0; c < prog.const_count; ++c) {
+        gles_cmd cmd = {.type = GLES_CMD_LOAD_CONSTANT};
+        cmd.u[0] = prog.consts[c].idx;
+        cmd.f[0] = prog.consts[c].value[0];
+        cmd.f[1] = prog.consts[c].value[1];
+        cmd.f[2] = prog.consts[c].value[2];
+        cmd.f[3] = prog.consts[c].value[3];
+        cl_push(out, cmd);
+    }
+    for (size_t idx = 0; idx < prog.count; ++idx)
+        xlate(&prog.code[idx], out);
+
+    asm_program_free(&prog);
+
     free(src);
     if (r != 0)
         return -3;

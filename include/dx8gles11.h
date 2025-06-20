@@ -25,6 +25,7 @@ typedef enum gles_cmd_type {
     GLES_CMD_MATRIX_LOAD,
     GLES_CMD_LOAD_IDENTITY,
     GLES_CMD_LIGHT_PARAM,
+    GLES_CMD_LOAD_CONSTANT,
     /*
      * Emitted when the translator encounters an unsupported opcode or
      * invalid operand. For example, "mov oT8, r0" produces this command and
