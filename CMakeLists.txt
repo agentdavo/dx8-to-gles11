@@ -20,7 +20,6 @@
 #  File: CMakeLists.txt
 # -------------------------------------------------------------
 
-#cmake_minimum_required(VERSION 3.16)
 
 cmake_minimum_required(VERSION 3.16)
 project(DX8toGLES11 LANGUAGES C)
