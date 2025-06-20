@@ -29,6 +29,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option(BUILD_EXAMPLES "Build replay_runtime example" ON)
+enable_testing()
 
 add_library(dx8gles11 STATIC
     src/preprocess.c
@@ -63,3 +64,5 @@ if(BUILD_EXAMPLES)
         target_link_libraries(replay_runtime OpenGL::GL)
     endif()
 endif()
+
+add_subdirectory(tests)

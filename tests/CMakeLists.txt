@@ -1,0 +1,4 @@
+add_executable(test_preprocess test_preprocess.c)
+set_target_properties(test_preprocess PROPERTIES C_STANDARD 11)
+target_link_libraries(test_preprocess dx8gles11)
+add_test(NAME test_preprocess COMMAND test_preprocess)

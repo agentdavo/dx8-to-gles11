@@ -35,19 +35,43 @@ static char *read_file(const char *p) {
     return b;
 }
 static char *subst_macros(const char *line, macro *macros) {
-    char *out = strdup(line);
-    for (size_t i = 0; i < sb_count(macros); ++i) {
-        char *pos;
-        while ((pos = strstr(out, macros[i].name))) {
-            size_t newlen = strlen(out) - strlen(macros[i].name) + strlen(macros[i].value);
-            char *tmp = malloc(newlen + 1);
-            size_t pref = pos - out;
-            memcpy(tmp, out, pref);
-            strcpy(tmp + pref, macros[i].value);
-            strcpy(tmp + pref + strlen(macros[i].value), pos + strlen(macros[i].name));
-            free(out);
-            out = tmp;
+    size_t out_len = 0;
+    char *out = NULL;
+    const char *cur = line;
+    while (*cur) {
+        if (isalpha((unsigned char)*cur) || *cur == '_') {
+            const char *start = cur;
+            ++cur;
+            while (isalnum((unsigned char)*cur) || *cur == '_')
+                ++cur;
+            size_t tok_len = (size_t)(cur - start);
+            const char *replace = NULL;
+            for (size_t i = 0; i < sb_count(macros); ++i) {
+                if (strlen(macros[i].name) == tok_len &&
+                    strncmp(start, macros[i].name, tok_len) == 0) {
+                    replace = macros[i].value;
+                    break;
+                }
+            }
+            if (replace) {
+                size_t rlen = strlen(replace);
+                out = realloc(out, out_len + rlen + 1);
+                memcpy(out + out_len, replace, rlen);
+                out_len += rlen;
+            } else {
+                out = realloc(out, out_len + tok_len + 1);
+                memcpy(out + out_len, start, tok_len);
+                out_len += tok_len;
+            }
+        } else {
+            out = realloc(out, out_len + 2);
+            out[out_len++] = *cur++;
         }
+    }
+    if (!out) {
+        out = strdup("");
+    } else {
+        out[out_len] = '\0';
     }
     return out;
 }
