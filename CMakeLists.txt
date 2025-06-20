@@ -1,24 +1,24 @@
-// =============================================================
-//  DirectX 8 Shader → OpenGL ES 1.1 Fixed‑Function Translator
-//  ---------------------------------------------------------
-//  Project layout
-//
-//  ├── CMakeLists.txt
-//  ├── include/
-//  │   ├── dx8gles11.h          (public API + enums)
-//  │   ├── preprocess.h         (tiny C pre‑processor)
-//  │   ├── dx8asm_parser.h      (DX8 ASM → IR)
-//  │   └── utils.h              (stretchy‑buffer helpers)
-//  └── src/
-//      ├── preprocess.c
-//      ├── dx8asm_parser.c
-//      ├── dx8_to_gles11.c      (translator + error handling)
-//      └── utils.c
-// =============================================================
+# =============================================================
+#  DirectX 8 Shader → OpenGL ES 1.1 Fixed‑Function Translator
+#  ---------------------------------------------------------
+#  Project layout
+#
+#  ├── CMakeLists.txt
+#  ├── include/
+#  │   ├── dx8gles11.h          (public API + enums)
+#  │   ├── preprocess.h         (tiny C pre‑processor)
+#  │   ├── dx8asm_parser.h      (DX8 ASM → IR)
+#  │   └── utils.h              (stretchy‑buffer helpers)
+#  └── src/
+#      ├── preprocess.c
+#      ├── dx8asm_parser.c
+#      ├── dx8_to_gles11.c      (translator + error handling)
+#      └── utils.c
+# =============================================================
 
-// -------------------------------------------------------------
-//  File: CMakeLists.txt
-// -------------------------------------------------------------
+# -------------------------------------------------------------
+#  File: CMakeLists.txt
+# -------------------------------------------------------------
 
 #cmake_minimum_required(VERSION 3.16)
 

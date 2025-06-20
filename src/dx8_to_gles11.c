@@ -18,7 +18,14 @@ const char *dx8gles11_error(void){ return g_err; }
 static void cl_init(GLES_CommandList *l){ l->data=NULL; l->count=l->capacity=0; }
 static void cl_push(GLES_CommandList *l, gles_cmd c){ sb_push(l->data,c); l->count=sb_count(l->data); l->capacity=sb_capacity(l->data);}
 void gles_cmdlist_free(GLES_CommandList *l){ sb_free(l->data); l->data=NULL; l->count=l->capacity=0; }
-static void push4f(GLES_CommandList *o, gles_cmd_type t,float a,float b,float c,float d){ gles_cmd c={.type=t}; c.f[0]=a; c.f[1]=b; c.f[2]=c; c.f[3]=d; cl_push(o,c);}
+static void push4f(GLES_CommandList *o, gles_cmd_type t,float a,float b,float c,float d){
+    gles_cmd cmd = {.type = t};
+    cmd.f[0] = a;
+    cmd.f[1] = b;
+    cmd.f[2] = c;
+    cmd.f[3] = d;
+    cl_push(o, cmd);
+}
 
 /* ----------------------------------------------------------------------------------
 
