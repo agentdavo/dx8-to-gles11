@@ -107,8 +107,10 @@ static void xlate(const asm_instr *i, GLES_CommandList *o) {
 /* shared compilation logic for string and file paths */
 static int compile_from_source(const char *src, GLES_CommandList *out) {
     asm_program prog = {0};
-    if (asm_parse(src, &prog, NULL)) {
-        set_err("parse error");
+    char *parse_err = NULL;
+    if (asm_parse(src, &prog, &parse_err)) {
+        set_err("parse error: %s", parse_err ? parse_err : "?");
+        free(parse_err);
         return -1;
     }
     for (size_t idx = 0; idx < prog.count; ++idx)
@@ -149,8 +151,10 @@ int dx8gles11_compile_file(const char *path, const dx8gles11_options *opt, GLES_
     }
 
     asm_program prog = {0};
-    if (asm_parse(src, &prog, NULL)) {
-        set_err("parse error");
+    char *parse_err = NULL;
+    if (asm_parse(src, &prog, &parse_err)) {
+        set_err("parse error: %s", parse_err ? parse_err : "?");
+        free(parse_err);
         free(src);
         return -3;
     }
@@ -167,9 +171,6 @@ int dx8gles11_compile_file(const char *path, const dx8gles11_options *opt, GLES_
         xlate(&prog.code[idx], out);
 
     asm_program_free(&prog);
-
     free(src);
-    if (r != 0)
-        return -3;
     return 0;
 }
