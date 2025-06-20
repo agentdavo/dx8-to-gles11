@@ -51,9 +51,20 @@ static char *subst_macros(const char *line, macro *macros) {
     }
     return out;
 }
-static char *process(const char *src_path, const char *src, const char *inc_dir, macro *macros,
-                     char **err) {
-    (void)src_path;
+static char *path_dir(const char *path) {
+    const char *slash = strrchr(path, '/');
+#ifdef _WIN32
+    const char *bslash = strrchr(path, '\\');
+    if (!slash || (bslash && bslash > slash))
+        slash = bslash;
+#endif
+    if (!slash)
+        return strdup(".");
+    return util_strndup(path, (size_t)(slash - path));
+}
+
+static char *process(const char *src_path, const char *src, const char *inc_dir, const char *cur_dir,
+                     macro *macros, char **err) {
     char *out = NULL;
     size_t out_len = 0;
     const char *cur = src;
@@ -77,15 +88,21 @@ static char *process(const char *src_path, const char *src, const char *inc_dir,
                         ++trim;
                     char *inc_name = util_strndup(p, trim - p);
                     char path[260];
-                    snprintf(path, sizeof(path), "%s/%s", inc_dir ? inc_dir : ".", inc_name);
+                    snprintf(path, sizeof(path), "%s/%s", cur_dir ? cur_dir : ".", inc_name);
                     char *inc_src = read_file(path);
+                    if (!inc_src && inc_dir) {
+                        snprintf(path, sizeof(path), "%s/%s", inc_dir, inc_name);
+                        inc_src = read_file(path);
+                    }
                     if (!inc_src) {
                         util_asprintf(err, "Could not open include '%s'", inc_name);
                         free(inc_name);
                         free(line);
                         continue;
                     }
-                    char *inc_out = process(path, inc_src, inc_dir, macros, err);
+                    char *child_dir = path_dir(path);
+                    char *inc_out = process(path, inc_src, inc_dir, child_dir, macros, err);
+                    free(child_dir);
                     if (!inc_out) {
                         free(inc_src);
                         free(inc_name);
@@ -133,9 +150,11 @@ char *pp_run(const char *src_p, const char *inc_dir, char **err) {
         *err = strdup("Could not read source file");
         return NULL;
     }
+    char *dir = path_dir(src_p);
     macro *macros = NULL;
-    char *o = process(src_p, s, inc_dir, macros, err);
+    char *o = process(src_p, s, inc_dir, dir, macros, err);
     macros_free(macros);
+    free(dir);
     free(s);
     return o;
 }
