@@ -47,6 +47,7 @@ typedef struct GLES_CommandList {
 
 /* API ----------------------------------------------------------- */
 int dx8gles11_compile_file(const char *path, const dx8gles11_options *opts, GLES_CommandList *out);
+int dx8gles11_compile_string(const char *src, const dx8gles11_options *opts, GLES_CommandList *out);
 const char *dx8gles11_error(void);
 void gles_cmdlist_free(GLES_CommandList *);
 

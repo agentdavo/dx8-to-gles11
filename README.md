@@ -78,6 +78,8 @@ if (dx8gles11_compile_file("shader.asm", NULL, &cl) != 0) {
     exit(1);
 }
 
+/* alternatively: dx8gles11_compile_string(src_text, NULL, &cl); */
+
 for (size_t i = 0; i < cl.count; ++i) {
     const gles_cmd *c = &cl.data[i];
     /* switch (c->type) → issue gl* calls */
@@ -85,6 +87,10 @@ for (size_t i = 0; i < cl.count; ++i) {
 
 gles_cmdlist_free(&cl);
 ```
+
+If the assembly text is already in memory, call `dx8gles11_compile_string()`
+instead of `dx8gles11_compile_file()`. The string is consumed as-is with no
+`#include` processing.
 
 A reference executor (`examples/replay_runtime.c`) is planned for v0.2.
 
