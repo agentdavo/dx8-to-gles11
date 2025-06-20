@@ -1,0 +1,6 @@
+add_executable(pp_alloc_fail pp_alloc_fail.c)
+target_include_directories(pp_alloc_fail PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(pp_alloc_fail PRIVATE ASM_PATH="${CMAKE_SOURCE_DIR}/tests/fixtures/basic.asm")
+target_link_libraries(pp_alloc_fail dx8gles11)
+target_link_options(pp_alloc_fail PRIVATE -Wl,--wrap=realloc)
+add_test(NAME pp_alloc_fail COMMAND pp_alloc_fail)

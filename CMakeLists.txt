@@ -63,3 +63,6 @@ if(BUILD_EXAMPLES)
         target_link_libraries(replay_runtime OpenGL::GL)
     endif()
 endif()
+
+enable_testing()
+add_subdirectory(tests)

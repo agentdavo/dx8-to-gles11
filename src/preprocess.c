@@ -93,7 +93,17 @@ static char *process(const char *src_path, const char *src, const char *inc_dir,
                         return NULL;
                     }
                     size_t inc_len = strlen(inc_out);
-                    out = realloc(out, out_len + inc_len + 1);
+                    char *tmp = realloc(out, out_len + inc_len + 1);
+                    if (!tmp) {
+                        util_asprintf(err, "out of memory");
+                        free(out);
+                        free(inc_src);
+                        free(inc_out);
+                        free(inc_name);
+                        free(line);
+                        return NULL;
+                    }
+                    out = tmp;
                     memcpy(out + out_len, inc_out, inc_len);
                     out_len += inc_len;
                     out[out_len] = '\0';
@@ -116,7 +126,15 @@ static char *process(const char *src_path, const char *src, const char *inc_dir,
         } else {
             char *exp = subst_macros(line, macros);
             size_t l = strlen(exp);
-            out = realloc(out, out_len + l + 2);
+            char *tmp = realloc(out, out_len + l + 2);
+            if (!tmp) {
+                util_asprintf(err, "out of memory");
+                free(out);
+                free(exp);
+                free(line);
+                return NULL;
+            }
+            out = tmp;
             memcpy(out + out_len, exp, l);
             out_len += l;
             out[out_len++] = '\n';
