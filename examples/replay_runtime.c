@@ -12,7 +12,14 @@ static void execute_cmds(const GLES_CommandList *cl) {
             glEnableClientState(GL_COLOR_ARRAY);
             break;
         case GLES_CMD_TEX_ENV_COMBINE:
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, c->u[1]);
+            /*
+             * c->u[0] holds the desired texture env mode (GL_COMBINE).
+             * c->u[1] selects the combine function, reused for both RGB
+             * and ALPHA channels.
+             */
+            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, c->u[0]);
+            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, c->u[1]);
+            glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, c->u[1]);
             break;
         case GLES_CMD_MULTITEXCOORD4F:
             glClientActiveTexture(c->u[0]);
