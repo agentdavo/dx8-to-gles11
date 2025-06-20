@@ -43,12 +43,14 @@ target_include_directories(dx8gles11 PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
-install(TARGETS dx8gles11
+install(
+    TARGETS dx8gles11
     EXPORT dx8gles11Targets
     ARCHIVE DESTINATION lib
 )
 install(DIRECTORY include/ DESTINATION include)
-install(EXPORT dx8gles11Targets
+install(
+    EXPORT dx8gles11Targets
     FILE dx8gles11Config.cmake
     NAMESPACE dx8::
     DESTINATION lib/cmake/dx8gles11

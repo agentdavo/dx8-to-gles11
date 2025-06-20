@@ -30,18 +30,18 @@ typedef enum gles_cmd_type {
 
 typedef struct gles_cmd {
     gles_cmd_type type;
-    float  f[4];
+    float f[4];
     uint32_t u[4];
 } gles_cmd;
 
 typedef struct GLES_CommandList {
     gles_cmd *data;
-    size_t    count;
-    size_t    capacity;
+    size_t count;
+    size_t capacity;
 } GLES_CommandList;
 
 /* API ----------------------------------------------------------- */
-int  dx8gles11_compile_file(const char *path, const dx8gles11_options *opts, GLES_CommandList *out);
+int dx8gles11_compile_file(const char *path, const dx8gles11_options *opts, GLES_CommandList *out);
 const char *dx8gles11_error(void);
 void gles_cmdlist_free(GLES_CommandList *);
 

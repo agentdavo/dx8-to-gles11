@@ -3,8 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *util_strndup(const char *s, size_t n)
-{
+char *util_strndup(const char *s, size_t n) {
     size_t len = 0;
     while (len < n && s[len])
         ++len;
@@ -16,8 +15,7 @@ char *util_strndup(const char *s, size_t n)
     return out;
 }
 
-int util_vasprintf(char **out, const char *fmt, va_list ap)
-{
+int util_vasprintf(char **out, const char *fmt, va_list ap) {
     va_list ap2;
     va_copy(ap2, ap);
     int len = vsnprintf(NULL, 0, fmt, ap2);
@@ -32,8 +30,7 @@ int util_vasprintf(char **out, const char *fmt, va_list ap)
     return vsnprintf(*out, (size_t)len + 1, fmt, ap);
 }
 
-int util_asprintf(char **out, const char *fmt, ...)
-{
+int util_asprintf(char **out, const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     int r = util_vasprintf(out, fmt, ap);
