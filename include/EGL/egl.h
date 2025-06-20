@@ -17,7 +17,7 @@ extern "C" {
 ** Khronos $Git commit SHA1: bd4838f57c $ on $Git commit date: 2024-09-09 22:54:26 -0600 $
 */
 
-#include <EGL/eglplatform.h>
+#include "EGL/eglplatform.h"
 
 #ifndef EGL_EGL_PROTOTYPES
 #define EGL_EGL_PROTOTYPES 1
@@ -38,8 +38,8 @@ extern "C" {
 #define EGL_VERSION_1_0 1
 typedef unsigned int EGLBoolean;
 typedef void *EGLDisplay;
-#include <KHR/khrplatform.h>
-#include <EGL/eglplatform.h>
+#include "KHR/khrplatform.h"
+#include "EGL/eglplatform.h"
 typedef void *EGLConfig;
 typedef void *EGLSurface;
 typedef void *EGLContext;

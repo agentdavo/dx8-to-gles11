@@ -17,7 +17,7 @@ extern "C" {
 ** Khronos $Git commit SHA1: bd4838f57c $ on $Git commit date: 2024-09-09 22:54:26 -0600 $
 */
 
-#include <EGL/eglplatform.h>
+#include "EGL/eglplatform.h"
 
 #define EGL_EGLEXT_VERSION 20240909
 

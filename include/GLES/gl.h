@@ -15,7 +15,7 @@ extern "C" {
 **   https://github.com/KhronosGroup/OpenGL-Registry
 */
 
-#include <GLES/glplatform.h>
+#include "GLES/glplatform.h"
 
 /* Generated on date 20240815 */
 
@@ -31,7 +31,7 @@ extern "C" {
 
 #ifndef GL_VERSION_ES_CM_1_0
 #define GL_VERSION_ES_CM_1_0 1
-#include <KHR/khrplatform.h>
+#include "KHR/khrplatform.h"
 typedef khronos_int8_t GLbyte;
 typedef khronos_float_t GLclampf;
 typedef khronos_int16_t GLshort;
