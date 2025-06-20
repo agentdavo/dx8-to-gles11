@@ -1,0 +1,105 @@
+# File: README.md
+
+---
+
+# DX8 → GLES 1.1 Translator
+
+A **tiny C‑11 static library** that ingests legacy **DirectX 8 shaders**, runs a minimal **C‑style pre‑processor** (`#include`, `#define`), parses the DX8 opcodes, and emits an **in‑memory command list** representing equivalent **OpenGL ES 1.1 fixed‑function** state calls.
+
+> **Why?**  
+> Early 2000‑era games often shipped vertex shaders authored for DirectX 8 GPUs (GeForce 3/4, Radeon 8500). On embedded or retro devices you may only have GLES 1.x. This project lets you replay those shaders—colour modulation, texture combiners, MVP transforms—on vintage or embedded hardware **without** baking new GLSL.
+
+---
+
+## Features
+
+| Area                         | Support | Notes |
+|------------------------------|---------|-------|
+| `#include` / `#define`       | ✅      | No macro parameters yet. |
+| DX8 opcodes → IR             | ✅      | `mov`, `dp4`, `mul`, `mad`, more easy to add. |
+| Opcode → GLES combiner       | ✅      | Maps core `GL_COMBINE`, `GL_MODULATE`, `GL_ADD_SIGNED`, etc. |
+| Matrix load / MVP            | ✅      | Emits `GLES_CMD_MATRIX_MODE` + runtime load. |
+| Multi‑texture coords         | ✅      | `mov oTn, …` → `glClientActiveTexture`. |
+| Error API                    | ✅      | `dx8gles11_error()` returns last human string. |
+| Command‑list heap            | ✅      | Stretchy‑buffer; no external deps. |
+| Build system                 | ✅      | Portable **CMake ≥ 3.16**. |
+| Optimisation pass            | ⬜️      | Planned (dead code / constant folding). |
+| Fragment shaders             | ⬜️      | Not covered—GLES 1.1 has none (consider IMG/ARB extensions). |
+
+---
+
+## Directory Layout
+
+```
+├── CMakeLists.txt          Build script (static lib)
+├── include/                Public headers
+│   ├── GLES/         		OpenGL ES 1.1 headers
+│   ├── dx8gles11.h         Main API + enums
+│   ├── preprocess.h        Tiny C pre‑processor
+│   ├── dx8asm_parser.h     DX8 ASM → IR structs
+│   └── utils.h             Header‑only stretchy buffer
+└── src/                    Library sources
+    ├── preprocess.c        Pre‑processor impl.
+    ├── dx8asm_parser.c     ASM tokeniser / IR builder
+    ├── dx8_to_gles11.c     Translator + error text
+    └── utils.c             Empty (placeholder for future code)
+```
+
+---
+
+## Quick Start
+
+```bash
+# 1. Fetch
+$ git clone https://github.com/agentdavo/dx8‑to‑gles11.git
+$ cd dx8‑to‑gles11
+
+# 2. Build (desktop mock‑GL)
+$ mkdir build && cd build
+$ cmake ..  # respects $CC / $CFLAGS
+$ cmake --build .
+
+# 3. Link
+# add build/libdx8gles11.a to your link line, include "dx8gles11.h"
+```
+
+On Android / iOS set `-DPLATFORM_GLES=ON` or simply ensure the header search path resolves to **Khronos GLES 1.1** headers.
+
+---
+
+## Using the API
+
+```c
+#include "dx8gles11.h"
+
+GLES_CommandList cl;
+if (dx8gles11_compile_file("shader.asm", NULL, &cl) != 0) {
+    fprintf(stderr, "compile failed: %s\n", dx8gles11_error());
+    exit(1);
+}
+
+for (size_t i = 0; i < cl.count; ++i) {
+    const gles_cmd *c = &cl.data[i];
+    /* switch (c->type) → issue gl* calls */
+}
+
+gles_cmdlist_free(&cl);
+```
+
+A reference executor (`examples/replay_runtime.c`) is planned for v0.2.
+
+---
+
+## Roadmap
+
+* **v0.2** – constant registers, `def cN, …`, point‑sprite OES support.
+* **v0.3** – optional fragment‑shader transpiler for `IMG_texture_env_enhanced_fixed_function`.
+* **v1.0** – full DX8 VS coverage, automated test harness with golden JSON.
+
+Community PRs welcome—see `CONTRIBUTING.md` (coming soon).
+
+---
+
+## License
+
+MIT © 2025 Open‑Source Contributors.  Generated Khronos headers retain their original MIT license.

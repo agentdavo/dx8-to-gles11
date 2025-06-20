@@ -1,0 +1,73 @@
+#include "dx8gles11.h"
+#include "dx8asm_parser.h"
+#include "preprocess.h"
+#include "utils.h"
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <GLES/gl.h>
+#include <GLES/glext.h>
+
+static char g_err[256]="";
+static void set_err(const char *fmt,...){ va_list ap; va_start(ap,fmt); vsnprintf(g_err,sizeof(g_err),fmt,ap); va_end(ap);}
+const char *dx8gles11_error(void){ return g_err; }
+
+/* Command-list helpers */
+static void cl_init(GLES_CommandList *l){ l->data=NULL; l->count=l->capacity=0; }
+static void cl_push(GLES_CommandList *l, gles_cmd c){ sb_push(l->data,c); l->count=sb_count(l->data); l->capacity=sb_capacity(l->data);}
+void gles_cmdlist_free(GLES_CommandList *l){ sb_free(l->data); l->data=NULL; l->count=l->capacity=0; }
+static void push4f(GLES_CommandList *o, gles_cmd_type t,float a,float b,float c,float d){ gles_cmd c={.type=t}; c.f[0]=a; c.f[1]=b; c.f[2]=c; c.f[3]=d; cl_push(o,c);}
+
+/* ----------------------------------------------------------------------------------
+
+Opcode translators – extend as needed.
+
+--------------------------------------------------------------------------------*/
+static void xlate(const asm_instr *i, GLES_CommandList *o){
+    if(!strcmp(i->opcode,"mov") && !strncmp(i->dst,"oD",2)){
+        gles_cmd c={.type=GLES_CMD_COLOR4F}; c.u[0]=0; cl_push(o,c); return;
+    }
+
+    if(!strcmp(i->opcode,"dp4") && !strcmp(i->dst,"oPos")){
+        gles_cmd c={.type=GLES_CMD_MATRIX_MODE}; c.u[0]=GL_MODELVIEW; cl_push(o,c); return;
+    }
+
+    if(!strcmp(i->opcode,"mul")){
+        gles_cmd c={.type=GLES_CMD_TEX_ENV_COMBINE}; c.u[0]=GL_COMBINE; c.u[1]=GL_MODULATE; cl_push(o,c); return;
+    }
+
+    if(!strcmp(i->opcode,"mad")){
+        gles_cmd c={.type=GLES_CMD_TEX_ENV_COMBINE}; c.u[0]=GL_COMBINE; c.u[1]=GL_ADD_SIGNED; cl_push(o,c); return;
+    }
+
+    if(!strcmp(i->opcode,"dp3")){
+        gles_cmd c={.type=GLES_CMD_TEX_ENV_COMBINE}; c.u[0]=GL_COMBINE; c.u[1]=GL_DOT3_RGB; cl_push(o,c); return;
+    }
+
+    if(!strcmp(i->opcode,"mov") && !strncmp(i->dst,"oT",2)){
+        unsigned stage=(unsigned)(i->dst[2]-'0');
+        gles_cmd c={.type=GLES_CMD_MULTITEXCOORD4F}; c.u[0]=GL_TEXTURE0+stage; cl_push(o,c); return;
+    }
+
+    /* default */
+    cl_push(o,(gles_cmd){.type=GLES_CMD_UNKNOWN});
+}
+
+int dx8gles11_compile_file(const char *path,const dx8gles11_options *opt,GLES_CommandList *out){
+    if(!out){ set_err("out list null"); return -1; }
+    cl_init(out);
+
+    char *pp_err=NULL;
+    char *src=pp_run(path,opt?opt->include_dir:NULL,&pp_err);
+    if(!src){ set_err("preprocess fail: %s", pp_err?pp_err:"?"); free(pp_err); return -2; }
+
+    asm_program prog={0};
+    if(asm_parse(src,&prog,NULL)){ set_err("parse error"); free(src); return -3; }
+    for(size_t idx=0; idx<prog.count; ++idx) xlate(&prog.code[idx], out);
+
+    asm_program_free(&prog);
+    free(src);
+    return 0;
+}
