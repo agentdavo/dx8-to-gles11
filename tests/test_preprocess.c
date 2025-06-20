@@ -1,27 +1,22 @@
 #include "preprocess.h"
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 int main(void) {
-    const char *path = "tmp_test.asm";
-    FILE *f = fopen(path, "w");
-    if (!f)
-        return 1;
-    fputs("#define FOO 1\nFOO\nFOOBAR\n", f);
-    fclose(f);
     char *err = NULL;
-    char *out = pp_run(path, ".", &err);
-    remove(path);
+    char *out = pp_run("fixtures/root.asm", NULL, &err);
     if (!out) {
-        fprintf(stderr, "pp_run failed: %s\n", err ? err : "unknown");
+        fprintf(stderr, "%s\n", err ? err : "pp_run failed");
         free(err);
         return 1;
     }
-    int ok = strcmp(out, "1\nFOOBAR\n") == 0;
-    if (!ok)
-        fprintf(stderr, "Unexpected output: '%s'\n", out);
+    const char *expect = "foo\nbar\nbaz\n";
+    if (strcmp(out, expect) != 0) {
+        fprintf(stderr, "unexpected:\n%s\n", out);
+        free(out);
+        return 1;
+    }
     free(out);
-    free(err);
-    return ok ? 0 : 1;
+    return 0;
 }
