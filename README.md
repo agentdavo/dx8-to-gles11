@@ -63,6 +63,16 @@ $ cmake --build .
 # add build/libdx8gles11.a to your link line, include "dx8gles11.h"
 ```
 
+### Running Tests
+
+```bash
+$ cd build
+$ ctest -V
+```
+
+The test suite compiles a few sample shaders under `tests/fixtures` and
+compares the generated command lists against the files in `tests/expected`.
+
 On Android / iOS set `-DPLATFORM_GLES=ON` or simply ensure the header search path resolves to **Khronos GLES 1.1** headers.
 
 ---
