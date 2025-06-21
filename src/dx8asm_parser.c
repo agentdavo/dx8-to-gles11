@@ -84,7 +84,7 @@ int asm_parse(const char *src, asm_program *prog, char **err) {
 
         asm_instr inst = {0};
         char operands[128] = "";
-        if (sscanf(trim, "%7s%127[^\n]", inst.opcode, operands) < 1) {
+        if (sscanf(trim, "%15s%127[^\n]", inst.opcode, operands) < 1) {
             if (err)
                 util_asprintf(err, "line %zu: invalid instruction: %s",
                               line - 1, trim);

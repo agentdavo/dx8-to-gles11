@@ -3,7 +3,8 @@
 #include <stddef.h>
 
 typedef struct asm_instr {
-    char opcode[8], dst[32], src0[32], src1[32], src2[32];
+    /* opcode buffer must hold instructions like "texbeml" or longer */
+    char opcode[16], dst[32], src0[32], src1[32], src2[32];
 } asm_instr;
 
 typedef enum asm_shader_type {
