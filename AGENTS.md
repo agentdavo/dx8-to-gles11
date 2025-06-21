@@ -14,8 +14,9 @@ This document gives autonomous or semi‑autonomous coders (GitHub Copilot, Cha
    Tokenises assembly into `asm_instr` array. Each struct stores opcode + up to 3 operands.
 3. **Translation** (`src/dx8_to_gles11.c`)  
    Walks the IR, appending `gles_cmd` records. Each record is an enum + 4×`float` + 4×`uint32` payload.
-4. **Runtime Execution** (not yet in tree)  
-   The host application drives OpenGL ES by switching on `cmd.type`.
+4. **Runtime pipeline** (`src/runtime_pipeline.c`)
+   Optional multi-threaded executor that decodes text, prepares GLES commands
+   and dispatches them on worker threads.
 
 ```
 DX8 .asm ─┐
@@ -69,6 +70,7 @@ preprocess() ──▶ asm_parse() ──▶ translate_instr() ──▶ GLES_Co
 * **Do not** introduce allocation in inner loops; use stretchy‑buffer where possible.
 * **Do not** include C++ code—the compilation is `LANGUAGES C`.
 * **Do not** add *new* external dependencies (zlib, stb, etc.) without a human‑review gate.
+* Ensure `pipeline_stop()` is called before `pipeline_join()` to cleanly end worker threads.
 * **Run `ctest -V`** before proposing a PR (tests will be added in v0.2).
 
 ---
