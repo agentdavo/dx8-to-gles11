@@ -62,6 +62,14 @@ static void execute_cmds(const GLES_CommandList *cl) {
         case GLES_CMD_MATRIX_LOAD:
             glLoadMatrixf(c->f);
             break;
+        case GLES_CMD_TEX_MATRIX_MODE:
+            glActiveTexture(GL_TEXTURE0 + c->u[0]);
+            glMatrixMode(GL_TEXTURE);
+            break;
+        case GLES_CMD_TEX_MATRIX_LOAD:
+            glActiveTexture(GL_TEXTURE0 + c->u[0]);
+            glLoadMatrixf(c->f);
+            break;
         case GLES_CMD_LOAD_IDENTITY:
             glLoadIdentity();
             break;

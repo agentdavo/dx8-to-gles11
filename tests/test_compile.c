@@ -69,6 +69,13 @@ static char *dump_cmds(const GLES_CommandList *cl) {
             util_asprintf(&line, "MATRIX_LOAD %.1f %.1f %.1f %.1f\n", c->f[0],
                           c->f[1], c->f[2], c->f[3]);
             break;
+        case GLES_CMD_TEX_MATRIX_MODE:
+            util_asprintf(&line, "TEX_MATRIX_MODE unit=%u\n", c->u[0]);
+            break;
+        case GLES_CMD_TEX_MATRIX_LOAD:
+            util_asprintf(&line, "TEX_MATRIX_LOAD unit=%u %.1f %.1f %.1f %.1f\n",
+                          c->u[0], c->f[0], c->f[1], c->f[2], c->f[3]);
+            break;
         case GLES_CMD_LOAD_IDENTITY:
             util_asprintf(&line, "LOAD_IDENTITY\n");
             break;
