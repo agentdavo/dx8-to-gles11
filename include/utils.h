@@ -31,6 +31,7 @@ static inline size_t *sb__raw(void *a) { return (size_t *)((char *)a - sizeof(si
     } while (0)
 
 char *util_strndup(const char *s, size_t n);
+char *util_strdup(const char *s);
 int util_vasprintf(char **out, const char *fmt, va_list ap);
 int util_asprintf(char **out, const char *fmt, ...);
 

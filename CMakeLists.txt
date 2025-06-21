@@ -57,7 +57,7 @@ install(
 )
 
 if(BUILD_EXAMPLES)
-    add_executable(replay_runtime examples/replay_runtime.c)
+    add_executable(replay_runtime examples/runtime/replay_runtime.c)
     target_link_libraries(replay_runtime dx8gles11)
     if(NOT EMSCRIPTEN)
         find_package(OpenGL REQUIRED)
