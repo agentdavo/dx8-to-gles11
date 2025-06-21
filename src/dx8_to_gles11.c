@@ -65,13 +65,13 @@ void gles_cmdlist_free(GLES_CommandList *l) {
     l->data = NULL;
     l->count = l->capacity = 0;
 }
-static int parse_stage(const char *reg, unsigned *out) {
+static int parse_stage(const char *restrict reg, unsigned *restrict out) {
     if (!reg || reg[0] != 't' || reg[1] < '0' || reg[1] > '3' || reg[2] != '\0')
         return -1;
     *out = (unsigned)(reg[1] - '0');
     return 0;
 }
-static void push4f(GLES_CommandList *o, gles_cmd_type t, float a, float b, float c, float d) {
+static void push4f(GLES_CommandList *restrict o, gles_cmd_type t, float a, float b, float c, float d) {
     gles_cmd cmd = {.type = t};
     cmd.f[0] = a;
     cmd.f[1] = b;
@@ -85,7 +85,8 @@ static void push4f(GLES_CommandList *o, gles_cmd_type t, float a, float b, float
 Opcode translators – extend as needed.
 
 --------------------------------------------------------------------------------*/
-static void xlate(const asm_instr *i, GLES_CommandList *o) {
+/* Translate a single instruction to one or more GLES commands. */
+void translate_instr(const asm_instr *restrict i, GLES_CommandList *restrict o) {
     if (!strcmp(i->opcode, "mov") && !strcmp(i->dst, "oPos")) {
         if (dx8gles11_has_extension("GL_OES_vertex_buffer_object")) {
             gles_cmd b = {.type = GLES_CMD_BIND_VBO};
@@ -399,7 +400,7 @@ static int compile_from_source(const char *src, GLES_CommandList *out) {
         return -2;
     }
     for (size_t idx = 0; idx < prog.count; ++idx)
-        xlate(&prog.code[idx], out);
+        translate_instr(&prog.code[idx], out);
 
     asm_program_free(&prog);
     return 0;
@@ -448,7 +449,7 @@ int dx8gles11_compile_string(const char *src, const dx8gles11_options *opt,
         cl_push(out, cmd);
     }
     for (size_t idx = 0; idx < prog.count; ++idx)
-        xlate(&prog.code[idx], out);
+        translate_instr(&prog.code[idx], out);
 
     asm_program_free(&prog);
     free(pp_src);
@@ -493,7 +494,7 @@ int dx8gles11_compile_file(const char *path, const dx8gles11_options *opt, GLES_
         cl_push(out, cmd);
     }
     for (size_t idx = 0; idx < prog.count; ++idx)
-        xlate(&prog.code[idx], out);
+        translate_instr(&prog.code[idx], out);
 
     asm_program_free(&prog);
     free(src);
