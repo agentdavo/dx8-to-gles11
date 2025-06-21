@@ -11,7 +11,7 @@ add_test(NAME parse_error_invalid_const COMMAND test_parse_error fixtures/invali
          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 add_executable(test_compile test_compile.c)
 target_link_libraries(test_compile dx8gles11)
-foreach(f mov_tex mul_const dp3_matrix add)
+foreach(f mov_tex mul_const dp3_matrix add matrix_ops)
     add_test(NAME compile_${f}
         COMMAND test_compile ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/${f}.asm
                               ${CMAKE_CURRENT_SOURCE_DIR}/expected/${f}.txt

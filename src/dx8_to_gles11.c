@@ -95,6 +95,22 @@ static void xlate(const asm_instr *i, GLES_CommandList *o) {
         return;
     }
 
+    if (!strcmp(i->opcode, "mload")) {
+        gles_cmd c = {.type = GLES_CMD_MATRIX_LOAD};
+        c.f[0] = strtof(i->dst, NULL);
+        c.f[1] = strtof(i->src0, NULL);
+        c.f[2] = strtof(i->src1, NULL);
+        c.f[3] = 1.0f;
+        cl_push(o, c);
+        return;
+    }
+
+    if (!strcmp(i->opcode, "loadi")) {
+        gles_cmd c = {.type = GLES_CMD_LOAD_IDENTITY};
+        cl_push(o, c);
+        return;
+    }
+
     if (!strcmp(i->opcode, "mov") && !strncmp(i->dst, "oT", 2)) {
         if (i->dst[2] < '0' || i->dst[2] > '7') {
             set_err("texture stage must be 0..7: %s", i->dst);
