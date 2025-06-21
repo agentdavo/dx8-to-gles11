@@ -1,11 +1,15 @@
 #include "runtime_pipeline.h"
 #include "dx8asm_parser.h"
+#include "dx8gles11.h"
 #include "utils.h"
 #include <threads.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+/* translator provided by dx8_to_gles11.c */
+extern void translate_instr(const asm_instr *restrict, GLES_CommandList *restrict);
 
 static _Thread_local char g_err[256] = "";
 /* per-thread counter tracking active pipeline starts */
@@ -17,8 +21,14 @@ typedef struct decode_ctx {
     asm_instr *buffer;
 } decode_ctx;
 
+typedef struct prepare_ctx {
+    lf_queue *prepare_q;
+    lf_queue *dispatch_q;
+    gles_cmd *buffer;
+} prepare_ctx;
+
 static void decode_worker(void *arg) {
-    decode_ctx *ctx = arg;
+    decode_ctx *restrict ctx = arg;
     for (;;) {
         char *src = lf_queue_pop(ctx->decode_q);
         if (!src) {
@@ -39,6 +49,28 @@ static void decode_worker(void *arg) {
         }
         free(err);
         asm_program_free(&prog);
+    }
+    sb_free(ctx->buffer);
+}
+
+static void prepare_worker(void *arg) {
+    prepare_ctx *restrict ctx = arg;
+    GLES_CommandList list = {0};
+    for (;;) {
+        asm_instr *in = lf_queue_pop(ctx->prepare_q);
+        if (!in) {
+            if (!g_started)
+                break;
+            thrd_yield();
+            continue;
+        }
+        translate_instr(in, &list);
+        for (size_t i = 0; i < list.count; ++i) {
+            sb_push(ctx->buffer, list.data[i]);
+            gles_cmd *out = &ctx->buffer[sb_count(ctx->buffer) - 1];
+            lf_queue_push(ctx->dispatch_q, out);
+        }
+        gles_cmdlist_free(&list);
     }
     sb_free(ctx->buffer);
 }
