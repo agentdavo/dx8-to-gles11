@@ -29,6 +29,9 @@ A **tiny C‑11 static library** that ingests legacy **DirectX 8 shaders**, run
 | Fragment shaders             | ⬜️      | Not covered—GLES 1.1 has none (consider IMG/ARB extensions). |
 
 * Additional `ps.1.3` instructions are recognised—`cnd` and texture dot-product ops (`texdp3`, `texdp3tex`, `texm3x3`).
+* Loading NPOT, volume and depth textures requires the `GL_OES_texture_npot`,
+  `GL_OES_texture_3D` and `GL_OES_depth_texture` extensions for full ps.1.3
+  support.
 
 ---
 

@@ -41,8 +41,11 @@ int asm_parse(const char *src, asm_program *prog, char **err) {
 
         char *buf = util_strndup(ls, len);
         char *sc = strchr(buf, ';');
-        if (sc)
+        char comment[64] = "";
+        if (sc) {
+            strncpy(comment, sc + 1, sizeof(comment) - 1);
             *sc = '\0';
+        }
 
         char *trim = trim_ws(buf);
         if (*trim == '\0') {
@@ -83,6 +86,7 @@ int asm_parse(const char *src, asm_program *prog, char **err) {
         }
 
         asm_instr inst = {0};
+        strncpy(inst.comment, trim_ws(comment), sizeof(inst.comment) - 1);
         char operands[128] = "";
         if (sscanf(trim, "%15s%127[^\n]", inst.opcode, operands) < 1) {
             if (err)

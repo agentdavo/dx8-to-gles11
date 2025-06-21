@@ -5,6 +5,13 @@
 #include <GLES/glext.h>
 #include <string.h>
 
+#ifndef GL_TEXTURE_3D_OES
+#define GL_TEXTURE_3D_OES 0x806F
+#endif
+#ifndef GL_DEPTH_COMPONENT
+#define GL_DEPTH_COMPONENT 0x1902
+#endif
+
 static void execute_cmds(const GLES_CommandList *cl) {
     for (size_t i = 0; i < cl->count; ++i) {
         const gles_cmd *c = &cl->data[i];
@@ -75,6 +82,36 @@ static void execute_cmds(const GLES_CommandList *cl) {
             break;
         case GLES_CMD_LOAD_CONSTANT:
             glColor4f(c->f[0], c->f[1], c->f[2], c->f[3]);
+            break;
+        case GLES_CMD_TEX_IMAGE_2D:
+            if (!dx8gles11_has_extension("GL_OES_texture_npot")) {
+                fprintf(stderr, "%s\n", dx8gles11_error());
+                return;
+            }
+            if (c->u[3])
+                glCompressedTexImage2D(GL_TEXTURE_2D, 0, c->u[2], c->u[0],
+                                        c->u[1], 0, 0, NULL);
+            else
+                glTexImage2D(GL_TEXTURE_2D, 0, c->u[2], c->u[0], c->u[1], 0,
+                             c->u[2], GL_UNSIGNED_BYTE, NULL);
+            break;
+        case GLES_CMD_TEX_IMAGE_3D:
+#ifdef GL_OES_texture_3D
+            if (!dx8gles11_has_extension("GL_OES_texture_3D")) {
+                fprintf(stderr, "%s\n", dx8gles11_error());
+                return;
+            }
+            glTexImage3DOES(GL_TEXTURE_3D_OES, 0, c->u[3], c->u[0], c->u[1],
+                            c->u[2], 0, c->u[3], GL_UNSIGNED_BYTE, NULL);
+#endif
+            break;
+        case GLES_CMD_TEX_IMAGE_DEPTH:
+            if (!dx8gles11_has_extension("GL_OES_depth_texture")) {
+                fprintf(stderr, "%s\n", dx8gles11_error());
+                return;
+            }
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, c->u[0], c->u[1],
+                         0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, NULL);
             break;
         default:
             break;
