@@ -60,8 +60,11 @@ install(
 )
 
 if(BUILD_EXAMPLES)
-    add_executable(replay_runtime examples/replay_runtime.c)
-    target_link_libraries(replay_runtime dx8gles11)
+    find_package(Threads REQUIRED)
+    add_executable(replay_runtime
+        examples/replay_runtime.c
+        src/minithread.c)
+    target_link_libraries(replay_runtime dx8gles11 Threads::Threads)
     if(NOT EMSCRIPTEN)
         find_package(OpenGL REQUIRED)
         target_link_libraries(replay_runtime OpenGL::GL)
