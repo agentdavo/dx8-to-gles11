@@ -10,7 +10,7 @@
 #include <GLES/gl.h>
 #include <GLES/glext.h>
 
-static char g_err[256] = "";
+static _Thread_local char g_err[256] = "";
 static void set_err(const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
