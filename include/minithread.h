@@ -24,6 +24,9 @@ void mt_pool_destroy(mt_pool *p);
 int mt_pool_submit(mt_pool *p, void (*func)(void *), void *arg);
 void mt_pool_join(mt_pool *p);
 
+int mt_thread_start(thrd_t *t, void (*func)(void *), void *arg);
+int mt_thread_join(thrd_t t);
+
 #ifdef __cplusplus
 }
 #endif
