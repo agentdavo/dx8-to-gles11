@@ -122,7 +122,8 @@ static char *process(const char *src_path, const char *src, const char *inc_dir,
                         util_asprintf(err, "Could not open include '%s'", inc_name);
                         free(inc_name);
                         free(line);
-                        continue;
+                        free(out);
+                        return NULL;
                     }
                     char *child_dir = path_dir(path);
                     char *inc_out = process(path, inc_src, inc_dir, child_dir, macros, err);
