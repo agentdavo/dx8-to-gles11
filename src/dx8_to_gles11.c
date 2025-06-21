@@ -241,7 +241,6 @@ static int compile_from_source(const char *src, GLES_CommandList *out) {
 
 int dx8gles11_compile_string(const char *src, const dx8gles11_options *opt,
                              GLES_CommandList *out) {
-    (void)opt;
     if (!src) {
         set_err("source null");
         return -1;
@@ -251,7 +250,38 @@ int dx8gles11_compile_string(const char *src, const dx8gles11_options *opt,
         return -1;
     }
     cl_init(out);
-    return compile_from_source(src, out);
+
+    char *pp_err = NULL;
+    char *pp_src = pp_run_string(src, opt ? opt->include_dir : NULL, &pp_err);
+    if (!pp_src) {
+        set_err("preprocess fail: %s", pp_err ? pp_err : "?");
+        free(pp_err);
+        return -2;
+    }
+
+    asm_program prog = {0};
+    char *parse_err = NULL;
+    if (asm_parse(pp_src, &prog, &parse_err)) {
+        set_err("parse error: %s", parse_err ? parse_err : "?");
+        free(parse_err);
+        free(pp_src);
+        return -3;
+    }
+    for (size_t c = 0; c < prog.const_count; ++c) {
+        gles_cmd cmd = {.type = GLES_CMD_LOAD_CONSTANT};
+        cmd.u[0] = prog.consts[c].idx;
+        cmd.f[0] = prog.consts[c].value[0];
+        cmd.f[1] = prog.consts[c].value[1];
+        cmd.f[2] = prog.consts[c].value[2];
+        cmd.f[3] = prog.consts[c].value[3];
+        cl_push(out, cmd);
+    }
+    for (size_t idx = 0; idx < prog.count; ++idx)
+        xlate(&prog.code[idx], out);
+
+    asm_program_free(&prog);
+    free(pp_src);
+    return 0;
 }
 
 int dx8gles11_compile_file(const char *path, const dx8gles11_options *opt, GLES_CommandList *out) {
