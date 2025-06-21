@@ -21,11 +21,13 @@ A **tiny C‑11 static library** that ingests legacy **DirectX 8 shaders**, run
 | Matrix load / MVP            | ✅      | Emits `GLES_CMD_MATRIX_MODE` + runtime load. |
 | Multi‑texture coords         | ✅      | `mov oTn, …` → `glClientActiveTexture`. |
 | Error API                    | ✅      | `dx8gles11_error()` returns last human string. |
-| Shader profile validation    | ✅      | Exceeding ps.1.1 or vs.1.1 limits fails compilation. |
+| Shader profile validation    | ✅      | Exceeding ps.1.1, ps.1.3 or vs.1.1 limits fails compilation. |
 | Command‑list heap            | ✅      | Stretchy‑buffer; no external deps. |
 | Build system                 | ✅      | Portable **CMake ≥ 3.16**. |
 | Optimisation pass            | ⬜️      | Planned (dead code / constant folding). |
 | Fragment shaders             | ⬜️      | Not covered—GLES 1.1 has none (consider IMG/ARB extensions). |
+
+* Additional `ps.1.3` instructions are recognised—`cnd` and texture dot-product ops (`texdp3`, `texdp3tex`, `texm3x3`).
 
 ---
 
