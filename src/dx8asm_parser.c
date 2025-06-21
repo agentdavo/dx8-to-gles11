@@ -55,6 +55,11 @@ int asm_parse(const char *src, asm_program *prog, char **err) {
             free(buf);
             continue;
         }
+        if (!strcmp(trim, "ps.1.3")) {
+            prog->type = ASM_SHADER_PS13;
+            free(buf);
+            continue;
+        }
         if (!strcmp(trim, "vs.1.1")) {
             prog->type = ASM_SHADER_VS11;
             free(buf);

@@ -237,6 +237,18 @@ static int validate_shader(const asm_program *p) {
             set_err("ps.1.1 allows max 4 tex and 8 arithmetic instructions");
             return -1;
         }
+    } else if (p->type == ASM_SHADER_PS13) {
+        size_t tex = 0, arith = 0;
+        for (size_t i = 0; i < p->count; ++i) {
+            if (!strncmp(p->code[i].opcode, "tex", 3))
+                ++tex;
+            else
+                ++arith;
+        }
+        if (tex > 4 || arith > 12) {
+            set_err("ps.1.3 allows max 4 tex and 12 arithmetic instructions");
+            return -1;
+        }
     } else if (p->type == ASM_SHADER_VS11) {
         if (p->count > 128) {
             set_err("vs.1.1 allows max 128 instructions");
