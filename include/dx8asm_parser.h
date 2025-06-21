@@ -9,6 +9,7 @@ typedef struct asm_instr {
 typedef enum asm_shader_type {
     ASM_SHADER_NONE,
     ASM_SHADER_PS11,
+    ASM_SHADER_PS13,
     ASM_SHADER_VS11
 } asm_shader_type;
 
