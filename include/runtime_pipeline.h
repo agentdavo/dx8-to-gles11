@@ -13,11 +13,18 @@ extern "C" {
  * Typical applications create 2-4 worker threads.
  */
 
+struct pipeline_stats;
+
 typedef struct pipeline {
     mt_pool workers;
-    lf_queue jobs;
+    lf_queue decode_q;
+    lf_queue prepare_q;
+    lf_queue dispatch_q;
     int num_threads;
+    struct pipeline_stats *stats;
 } pipeline;
+
+double pipeline_commands_per_second(const pipeline *p);
 
 int pipeline_init(pipeline *p, int num_threads);
 int pipeline_start(pipeline *p);
