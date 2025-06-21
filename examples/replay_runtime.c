@@ -1,5 +1,7 @@
 #include "dx8gles11.h"
+#include "runtime_pipeline.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <GLES/gl.h>
 #include <GLES/glext.h>
@@ -9,8 +11,32 @@
 #define GL_TEXTURE_3D_OES 0x806F
 #endif
 #ifndef GL_DEPTH_COMPONENT
+
 #define GL_DEPTH_COMPONENT 0x1902
 #endif
+
+static char *read_file(const char *path) {
+    FILE *f = fopen(path, "rb");
+    if (!f)
+        return NULL;
+    fseek(f, 0, SEEK_END);
+    long n = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    char *buf = malloc((size_t)n + 1);
+    if (!buf) {
+        fclose(f);
+        return NULL;
+    }
+    if (fread(buf, 1, (size_t)n, f) != (size_t)n) {
+        fclose(f);
+        free(buf);
+        return NULL;
+    }
+    fclose(f);
+    buf[n] = '\0';
+    return buf;
+}
+
 
 static void execute_cmds(const GLES_CommandList *cl) {
     for (size_t i = 0; i < cl->count; ++i) {
@@ -121,16 +147,32 @@ static void execute_cmds(const GLES_CommandList *cl) {
 
 int main(int argc, char **argv) {
     if (argc < 2) {
-        puts("usage: replay_runtime <shader.asm>");
+        puts("usage: replay_runtime <shader.asm> [threads]");
         return 1;
     }
-    GLES_CommandList cl;
-    if (dx8gles11_compile_file(argv[1], NULL, &cl)) {
-        fprintf(stderr, "%s\n", dx8gles11_error());
+    int threads = 2;
+    if (argc > 2)
+        threads = atoi(argv[2]);
+
+    char *src = read_file(argv[1]);
+    if (!src) {
+        fprintf(stderr, "failed to read %s\n", argv[1]);
         return 1;
     }
-    execute_cmds(&cl);
-    gles_cmdlist_free(&cl);
-    puts("OK");
+
+    pipeline p;
+    if (pipeline_init(&p, threads) || pipeline_start(&p)) {
+        fprintf(stderr, "pipeline init failed\n");
+        free(src);
+        return 1;
+    }
+
+    lf_queue_push(&p.decode_q, src);
+    pipeline_stop(&p);
+    double cps = pipeline_commands_per_second(&p);
+    pipeline_join(&p);
+    free(src);
+
+    printf("OK (%.2f cmds/s)\n", cps);
     return 0;
 }
