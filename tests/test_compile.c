@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "expected:\n%s\n-----\nactual:\n%s\n", expect ? expect : "(null)", out ? out : "(null)");
     }
     free(expect);
-    free(out);
+    sb_free(out);
     gles_cmdlist_free(&cl);
     return ok ? 0 : 1;
 }
