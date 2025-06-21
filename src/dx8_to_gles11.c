@@ -152,6 +152,41 @@ static void xlate(const asm_instr *i, GLES_CommandList *o) {
         return;
     }
 
+    if (!strcmp(i->opcode, "texdp3")) {
+        gles_cmd c = {.type = GLES_CMD_TEX_ENV_COMBINE};
+        c.u[0] = GL_COMBINE;
+        c.u[1] = GL_DOT3_RGB;
+        cl_push(o, c);
+        return;
+    }
+
+    if (!strcmp(i->opcode, "texdp3tex")) {
+        unsigned stage;
+        if (parse_stage(i->dst, &stage)) {
+            set_err("invalid texdp3tex stage: %s", i->dst);
+            cl_push(o, (gles_cmd){.type = GLES_CMD_UNKNOWN});
+            return;
+        }
+        gles_cmd c = {.type = GLES_CMD_TEX_ENV_COMBINE};
+        c.u[0] = GL_COMBINE;
+        c.u[1] = GL_DOT3_RGB;
+        cl_push(o, c);
+        c = (gles_cmd){.type = GLES_CMD_TEX_SAMPLE};
+        c.u[0] = stage;
+        cl_push(o, c);
+        return;
+    }
+
+    if (!strcmp(i->opcode, "texm3x3")) {
+        gles_cmd c = {.type = GLES_CMD_TEX_ENV_COMBINE};
+        c.u[0] = GL_COMBINE;
+        c.u[1] = GL_DOT3_RGB;
+        cl_push(o, c);
+        cl_push(o, c);
+        cl_push(o, c);
+        return;
+    }
+
     if (!strcmp(i->opcode, "mload")) {
         gles_cmd c = {.type = GLES_CMD_MATRIX_LOAD};
         c.f[0] = strtof(i->dst, NULL);
