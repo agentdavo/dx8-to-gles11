@@ -224,12 +224,26 @@ static void xlate(const asm_instr *i, GLES_CommandList *o) {
     }
 
     if (!strcmp(i->opcode, "mload")) {
-        gles_cmd c = {.type = GLES_CMD_MATRIX_LOAD};
-        c.f[0] = strtof(i->dst, NULL);
-        c.f[1] = strtof(i->src0, NULL);
-        c.f[2] = strtof(i->src1, NULL);
-        c.f[3] = 1.0f;
-        cl_push(o, c);
+        unsigned stage;
+        if (parse_stage(i->dst, &stage) == 0) {
+            gles_cmd c = {.type = GLES_CMD_TEX_MATRIX_MODE};
+            c.u[0] = stage;
+            cl_push(o, c);
+            c = (gles_cmd){.type = GLES_CMD_TEX_MATRIX_LOAD};
+            c.u[0] = stage;
+            c.f[0] = strtof(i->src0, NULL);
+            c.f[1] = strtof(i->src1, NULL);
+            c.f[2] = strtof(i->src2, NULL);
+            c.f[3] = 1.0f;
+            cl_push(o, c);
+        } else {
+            gles_cmd c = {.type = GLES_CMD_MATRIX_LOAD};
+            c.f[0] = strtof(i->dst, NULL);
+            c.f[1] = strtof(i->src0, NULL);
+            c.f[2] = strtof(i->src1, NULL);
+            c.f[3] = 1.0f;
+            cl_push(o, c);
+        }
         return;
     }
 
