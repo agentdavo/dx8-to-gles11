@@ -91,3 +91,34 @@ void mt_pool_join(mt_pool *p) {
     cnd_wait(&p->cv, &p->mtx);
   mtx_unlock(&p->mtx);
 }
+
+struct mt_start_ctx {
+  void (*func)(void *);
+  void *arg;
+};
+
+static int mt_start_trampoline(void *arg) {
+  struct mt_start_ctx *ctx = arg;
+  void (*func)(void *) = ctx->func;
+  void *fn_arg = ctx->arg;
+  free(ctx);
+  func(fn_arg);
+  return 0;
+}
+
+int mt_thread_start(thrd_t *t, void (*func)(void *), void *arg) {
+  struct mt_start_ctx *ctx = malloc(sizeof(*ctx));
+  if (!ctx)
+    return -1;
+  ctx->func = func;
+  ctx->arg = arg;
+  if (thrd_create(t, mt_start_trampoline, ctx) != thrd_success) {
+    free(ctx);
+    return -1;
+  }
+  return 0;
+}
+
+int mt_thread_join(thrd_t t) {
+  return thrd_join(t, NULL) == thrd_success ? 0 : -1;
+}
