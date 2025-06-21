@@ -25,6 +25,11 @@ static _Thread_local char g_err[256] = "";
 /* per-thread counter tracking active pipeline starts */
 static _Thread_local unsigned g_started = 0;
 
+#define PIPELINE_MIN_THREADS 1
+#define PIPELINE_MAX_THREADS 8
+_Static_assert(PIPELINE_MAX_THREADS >= PIPELINE_MIN_THREADS,
+               "invalid pipeline thread range");
+
 typedef struct pipeline_stats {
     struct timespec start;
     size_t commands;
@@ -71,6 +76,7 @@ static void decode_worker(void *arg) {
         asm_program_free(&prog);
     }
     sb_free(ctx->buffer);
+    free(ctx);
 }
 
 static void prepare_worker(void *arg) {
@@ -93,6 +99,7 @@ static void prepare_worker(void *arg) {
         gles_cmdlist_free(&list);
     }
     sb_free(ctx->buffer);
+    free(ctx);
 }
 
 static void dispatch_worker(void *arg) {
@@ -203,6 +210,7 @@ static void dispatch_worker(void *arg) {
 
         s->commands++;
     }
+    free(ctx);
 }
 
 static void set_err(const char *fmt, ...) {
@@ -224,7 +232,11 @@ int pipeline_init(pipeline *p, int num_threads) {
         lf_queue_destroy(&p->dispatch_q);
         return -1;
     }
-    p->num_threads = num_threads > 0 ? num_threads : 1;
+    if (num_threads < PIPELINE_MIN_THREADS)
+        num_threads = PIPELINE_MIN_THREADS;
+    if (num_threads > PIPELINE_MAX_THREADS)
+        num_threads = PIPELINE_MAX_THREADS;
+    p->num_threads = num_threads;
     p->stats = calloc((size_t)p->num_threads, sizeof(*p->stats));
     if (!p->stats) {
         set_err("stats alloc failed");
@@ -245,15 +257,66 @@ int pipeline_init(pipeline *p, int num_threads) {
 }
 
 int pipeline_start(pipeline *p) {
-    (void)p;
+    if (!p)
+        return -1;
+
+    decode_ctx *dctx = calloc(1, sizeof(*dctx));
+    prepare_ctx *pct = calloc(1, sizeof(*pct));
+    if (!dctx || !pct) {
+        free(dctx);
+        free(pct);
+        set_err("ctx alloc failed");
+        return -1;
+    }
+
+    dispatch_ctx **dispatch = calloc((size_t)p->num_threads, sizeof(*dispatch));
+    if (!dispatch) {
+        free(dctx);
+        free(pct);
+        set_err("ctx alloc failed");
+        return -1;
+    }
+
+    dctx->decode_q = &p->decode_q;
+    dctx->prepare_q = &p->prepare_q;
+    pct->prepare_q = &p->prepare_q;
+    pct->dispatch_q = &p->dispatch_q;
+
+    if (mt_pool_submit(&p->workers, decode_worker, dctx) ||
+        mt_pool_submit(&p->workers, prepare_worker, pct)) {
+        free(dctx);
+        free(pct);
+        free(dispatch);
+        set_err("submit failed");
+        return -1;
+    }
+
+    for (int i = 0; i < p->num_threads; ++i) {
+        dispatch[i] = calloc(1, sizeof(**dispatch));
+        if (!dispatch[i]) {
+            set_err("ctx alloc failed");
+            return -1;
+        }
+        dispatch[i]->dispatch_q = &p->dispatch_q;
+        dispatch[i]->stats = &p->stats[i];
+        if (mt_pool_submit(&p->workers, dispatch_worker, dispatch[i])) {
+            set_err("submit failed");
+            return -1;
+        }
+    }
+
+    free(dispatch);
     g_started++;
     return 0;
 }
 
 void pipeline_stop(pipeline *p) {
-    (void)p;
-    if (g_started)
+    if (!p)
+        return;
+    if (g_started) {
         g_started--;
+        mt_pool_join(&p->workers);
+    }
 }
 
 void pipeline_join(pipeline *p) {
