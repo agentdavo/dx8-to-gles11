@@ -11,6 +11,13 @@ static void execute_cmds(const GLES_CommandList *cl) {
             /* pass-through – bind vertex colour array */
             glEnableClientState(GL_COLOR_ARRAY);
             break;
+        case GLES_CMD_TEX_ENVF:
+            /*
+             * c->u[0] maps to the pname argument of glTexEnvf.
+             * c->f[0] provides the float parameter value.
+             */
+            glTexEnvf(GL_TEXTURE_ENV, c->u[0], c->f[0]);
+            break;
         case GLES_CMD_TEX_ENV_COMBINE:
             /*
              * c->u[0] holds the desired texture env mode (GL_COMBINE).
