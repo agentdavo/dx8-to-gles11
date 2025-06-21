@@ -3,7 +3,7 @@
 #include <stddef.h>
 
 typedef struct asm_instr {
-    char opcode[8], dst[32], src0[32], src1[32];
+    char opcode[8], dst[32], src0[32], src1[32], src2[32];
 } asm_instr;
 
 typedef struct asm_constant {

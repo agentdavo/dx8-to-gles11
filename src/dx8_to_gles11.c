@@ -34,6 +34,12 @@ void gles_cmdlist_free(GLES_CommandList *l) {
     l->data = NULL;
     l->count = l->capacity = 0;
 }
+static int parse_stage(const char *reg, unsigned *out) {
+    if (!reg || reg[0] != 't' || reg[1] < '0' || reg[1] > '3' || reg[2] != '\0')
+        return -1;
+    *out = (unsigned)(reg[1] - '0');
+    return 0;
+}
 static void push4f(GLES_CommandList *o, gles_cmd_type t, float a, float b, float c, float d) {
     gles_cmd cmd = {.type = t};
     cmd.f[0] = a;
@@ -49,6 +55,13 @@ Opcode translators – extend as needed.
 
 --------------------------------------------------------------------------------*/
 static void xlate(const asm_instr *i, GLES_CommandList *o) {
+    if (!strcmp(i->opcode, "mov") && !strcmp(i->dst, "oPos")) {
+        gles_cmd c = {.type = GLES_CMD_VERTEX_ATTRIB};
+        c.u[0] = 0;
+        cl_push(o, c);
+        return;
+    }
+
     if (!strcmp(i->opcode, "mov") && !strncmp(i->dst, "oD", 2)) {
         gles_cmd c = {.type = GLES_CMD_COLOR4F};
         c.u[0] = 0;
@@ -71,10 +84,26 @@ static void xlate(const asm_instr *i, GLES_CommandList *o) {
         return;
     }
 
+    if (!strcmp(i->opcode, "sub")) {
+        gles_cmd c = {.type = GLES_CMD_TEX_ENV_COMBINE};
+        c.u[0] = GL_COMBINE;
+        c.u[1] = GL_SUBTRACT;
+        cl_push(o, c);
+        return;
+    }
+
     if (!strcmp(i->opcode, "mad")) {
         gles_cmd c = {.type = GLES_CMD_TEX_ENV_COMBINE};
         c.u[0] = GL_COMBINE;
         c.u[1] = GL_ADD_SIGNED;
+        cl_push(o, c);
+        return;
+    }
+
+    if (!strcmp(i->opcode, "lrp")) {
+        gles_cmd c = {.type = GLES_CMD_TEX_ENV_COMBINE};
+        c.u[0] = GL_COMBINE;
+        c.u[1] = GL_INTERPOLATE;
         cl_push(o, c);
         return;
     }
@@ -107,6 +136,44 @@ static void xlate(const asm_instr *i, GLES_CommandList *o) {
 
     if (!strcmp(i->opcode, "loadi")) {
         gles_cmd c = {.type = GLES_CMD_LOAD_IDENTITY};
+        cl_push(o, c);
+        return;
+    }
+
+    if (!strcmp(i->opcode, "tex")) {
+        unsigned stage;
+        if (parse_stage(i->dst, &stage)) {
+            set_err("invalid tex stage: %s", i->dst);
+            cl_push(o, (gles_cmd){.type = GLES_CMD_UNKNOWN});
+            return;
+        }
+        gles_cmd c = {.type = GLES_CMD_TEX_SAMPLE};
+        c.u[0] = stage;
+        cl_push(o, c);
+        return;
+    }
+
+    if (!strcmp(i->opcode, "texld")) {
+        unsigned stage;
+        if (parse_stage(i->dst, &stage)) {
+            set_err("invalid texld stage: %s", i->dst);
+            cl_push(o, (gles_cmd){.type = GLES_CMD_UNKNOWN});
+            return;
+        }
+        gles_cmd c = {.type = GLES_CMD_TEX_LOAD};
+        c.u[0] = stage;
+        cl_push(o, c);
+        return;
+    }
+
+    if (!strcmp(i->opcode, "texcrd")) {
+        gles_cmd c = {.type = GLES_CMD_TEX_COORD_COPY};
+        cl_push(o, c);
+        return;
+    }
+
+    if (!strcmp(i->opcode, "texkill")) {
+        gles_cmd c = {.type = GLES_CMD_TEX_KILL};
         cl_push(o, c);
         return;
     }
