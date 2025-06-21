@@ -108,10 +108,38 @@ static void xlate(const asm_instr *i, GLES_CommandList *o) {
         return;
     }
 
+    if (!strcmp(i->opcode, "cnd")) {
+        gles_cmd c = {.type = GLES_CMD_TEX_ENV_COMBINE};
+        c.u[0] = GL_COMBINE;
+        c.u[1] = GL_INTERPOLATE;
+        cl_push(o, c);
+        return;
+    }
+
+    if (!strcmp(i->opcode, "nop")) {
+        return; /* no-op */
+    }
+
     if (!strcmp(i->opcode, "add")) {
         gles_cmd c = {.type = GLES_CMD_TEX_ENV_COMBINE};
         c.u[0] = GL_COMBINE;
         c.u[1] = GL_ADD;
+        cl_push(o, c);
+        return;
+    }
+
+    if (!strcmp(i->opcode, "max")) {
+        gles_cmd c = {.type = GLES_CMD_TEX_ENV_COMBINE};
+        c.u[0] = GL_COMBINE;
+        c.u[1] = GL_MAX_EXT;
+        cl_push(o, c);
+        return;
+    }
+
+    if (!strcmp(i->opcode, "min")) {
+        gles_cmd c = {.type = GLES_CMD_TEX_ENV_COMBINE};
+        c.u[0] = GL_COMBINE;
+        c.u[1] = GL_MIN_EXT;
         cl_push(o, c);
         return;
     }
