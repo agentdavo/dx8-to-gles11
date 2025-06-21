@@ -223,6 +223,33 @@ static void xlate(const asm_instr *i, GLES_CommandList *o) {
     cl_push(o, (gles_cmd){.type = GLES_CMD_UNKNOWN});
 }
 
+/* validate instruction/constant limits for shader profiles */
+static int validate_shader(const asm_program *p) {
+    if (p->type == ASM_SHADER_PS11) {
+        size_t tex = 0, arith = 0;
+        for (size_t i = 0; i < p->count; ++i) {
+            if (!strncmp(p->code[i].opcode, "tex", 3))
+                ++tex;
+            else
+                ++arith;
+        }
+        if (tex > 4 || arith > 8) {
+            set_err("ps.1.1 allows max 4 tex and 8 arithmetic instructions");
+            return -1;
+        }
+    } else if (p->type == ASM_SHADER_VS11) {
+        if (p->count > 128) {
+            set_err("vs.1.1 allows max 128 instructions");
+            return -1;
+        }
+        if (p->const_count > 12) {
+            set_err("vs.1.1 allows max 12 constants");
+            return -1;
+        }
+    }
+    return 0;
+}
+
 /* shared compilation logic for string and file paths */
 static int compile_from_source(const char *src, GLES_CommandList *out) {
     asm_program prog = {0};
@@ -231,6 +258,10 @@ static int compile_from_source(const char *src, GLES_CommandList *out) {
         set_err("parse error: %s", parse_err ? parse_err : "?");
         free(parse_err);
         return -1;
+    }
+    if (validate_shader(&prog)) {
+        asm_program_free(&prog);
+        return -2;
     }
     for (size_t idx = 0; idx < prog.count; ++idx)
         xlate(&prog.code[idx], out);
@@ -266,6 +297,11 @@ int dx8gles11_compile_string(const char *src, const dx8gles11_options *opt,
         free(parse_err);
         free(pp_src);
         return -3;
+    }
+    if (validate_shader(&prog)) {
+        asm_program_free(&prog);
+        free(pp_src);
+        return -4;
     }
     for (size_t c = 0; c < prog.const_count; ++c) {
         gles_cmd cmd = {.type = GLES_CMD_LOAD_CONSTANT};
@@ -306,6 +342,11 @@ int dx8gles11_compile_file(const char *path, const dx8gles11_options *opt, GLES_
         free(parse_err);
         free(src);
         return -3;
+    }
+    if (validate_shader(&prog)) {
+        asm_program_free(&prog);
+        free(src);
+        return -4;
     }
     for (size_t c = 0; c < prog.const_count; ++c) {
         gles_cmd cmd = {.type = GLES_CMD_LOAD_CONSTANT};
