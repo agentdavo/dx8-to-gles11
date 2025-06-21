@@ -33,6 +33,28 @@ A **tiny C‑11 static library** that ingests legacy **DirectX 8 shaders**, run
   `GL_OES_texture_3D` and `GL_OES_depth_texture` extensions for full ps.1.3
   support.
 
+## Requirements
+
+The translator probes several GLES 1.x extensions via `dx8gles11_has_extension()`
+and adjusts behaviour when support is missing.
+
+### Mandatory
+
+| Extension             | Notes                                                         |
+|-----------------------|---------------------------------------------------------------|
+| `GL_OES_multitexture` | Needed for multi‑stage texturing. Compilation fails without it. |
+
+### Optional
+
+| Extension                            | Fallback                                                                |
+|--------------------------------------|-------------------------------------------------------------------------|
+| `GL_OES_vertex_buffer_object`        | VBO commands are skipped and client arrays are expected.                |
+| `GL_OES_texture_matrix`              | Texture matrix uploads are ignored.                                     |
+| `GL_OES_texture_npot`                | NPOT uploads set `dx8gles11_error()` and return failure.                |
+| `GL_OES_depth_texture`               | Depth textures fail to create with an error.                            |
+| `GL_OES_texture_3D`                  | 3D texture uploads fail with an error.                                  |
+| `GL_OES_compressed_paletted_texture` | Falls back to uncompressed formats.                                     |
+
 ---
 
 ## Directory Layout
