@@ -20,6 +20,7 @@ A **tiny C‑11 static library** that ingests legacy **DirectX 8 shaders**, run
 | Opcode → GLES combiner       | ✅      | Maps core `GL_COMBINE`, `GL_MODULATE`, `GL_ADD_SIGNED`, etc. |
 | Matrix load / MVP            | ✅      | Emits `GLES_CMD_MATRIX_MODE` + runtime load. |
 | Multi‑texture coords         | ✅      | `mov oTn, …` → `glClientActiveTexture`. |
+| VBO support (OES)            | ✅      | Emits `GLES_CMD_BIND_VBO` when available. |
 | Error API                    | ✅      | `dx8gles11_error()` returns last human string. |
 | Shader profile validation    | ✅      | Exceeding ps.1.1, ps.1.3 or vs.1.1 limits fails compilation. |
 | Command‑list heap            | ✅      | Stretchy‑buffer; no external deps. |
@@ -108,7 +109,8 @@ instead of `dx8gles11_compile_file()`. The string is preprocessed first so
 Both compile functions run the same preprocessor. Missing `#include` files or
 exceeding shader limits triggers an error via `dx8gles11_error()`.
 
-A reference executor (`examples/replay_runtime.c`) is planned for v0.2.
+The sample runtime under `examples/replay_runtime.c` now shows how to bind a VBO
+and enable vertex arrays.
 
 ## Tools
 
