@@ -79,6 +79,14 @@ static void xlate(const asm_instr *i, GLES_CommandList *o) {
         return;
     }
 
+    if (!strcmp(i->opcode, "add")) {
+        gles_cmd c = {.type = GLES_CMD_TEX_ENV_COMBINE};
+        c.u[0] = GL_COMBINE;
+        c.u[1] = GL_ADD;
+        cl_push(o, c);
+        return;
+    }
+
     if (!strcmp(i->opcode, "dp3")) {
         gles_cmd c = {.type = GLES_CMD_TEX_ENV_COMBINE};
         c.u[0] = GL_COMBINE;
