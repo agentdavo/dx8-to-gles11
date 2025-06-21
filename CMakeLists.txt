@@ -72,6 +72,10 @@ if(BUILD_BENCHMARKS)
         tools/bench_translate.c
         src/minithread.c)
     target_link_libraries(bench_translate dx8gles11 Threads::Threads)
+    if(NOT EMSCRIPTEN)
+        find_package(OpenGL REQUIRED)
+        target_link_libraries(bench_translate OpenGL::GL)
+    endif()
 endif()
 
 enable_testing()
