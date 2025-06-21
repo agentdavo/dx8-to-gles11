@@ -19,6 +19,37 @@ static void set_err(const char *fmt, ...) {
 }
 const char *dx8gles11_error(void) { return g_err; }
 
+/* cache queried extension string */
+static const char *g_extensions = NULL;
+
+int dx8gles11_has_extension(const char *name) {
+    if (!name)
+        return 0;
+    if (!g_extensions) {
+        const GLubyte *ext = glGetString(GL_EXTENSIONS);
+        if (!ext) {
+            set_err("glGetString(GL_EXTENSIONS) failed");
+            g_extensions = "";
+            return 0;
+        }
+        g_extensions = (const char *)ext;
+    }
+    const char *s = g_extensions;
+    size_t len = strlen(name);
+    while (s && *s) {
+        while (*s == ' ')
+            ++s;
+        if (!strncmp(s, name, len) && (s[len] == ' ' || s[len] == '\0'))
+            return 1;
+        s = strchr(s, ' ');
+        if (!s)
+            break;
+        ++s;
+    }
+    set_err("missing GL extension: %s", name);
+    return 0;
+}
+
 /* Command-list helpers */
 static void cl_init(GLES_CommandList *l) {
     l->data = NULL;

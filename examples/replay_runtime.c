@@ -2,6 +2,8 @@
 #include <stdio.h>
 
 #include <GLES/gl.h>
+#include <GLES/glext.h>
+#include <string.h>
 
 static void execute_cmds(const GLES_CommandList *cl) {
     for (size_t i = 0; i < cl->count; ++i) {
@@ -24,6 +26,11 @@ static void execute_cmds(const GLES_CommandList *cl) {
              * c->u[1] selects the combine function, reused for both RGB
              * and ALPHA channels.
              */
+            if ((c->u[1] == GL_MAX_EXT || c->u[1] == GL_MIN_EXT) &&
+                !dx8gles11_has_extension("GL_EXT_blend_minmax")) {
+                fprintf(stderr, "%s\n", dx8gles11_error());
+                return;
+            }
             glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, c->u[0]);
             glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, c->u[1]);
             glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, c->u[1]);
