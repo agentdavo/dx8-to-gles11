@@ -200,3 +200,15 @@ char *pp_run(const char *src_p, const char *inc_dir, char **err) {
     free(s);
     return o;
 }
+
+char *pp_run_string(const char *src, const char *inc_dir, char **err) {
+    if (!src) {
+        if (err)
+            *err = util_strdup("source null");
+        return NULL;
+    }
+    macro *macros = NULL;
+    char *o = process(NULL, src, inc_dir, NULL, macros, err);
+    macros_free(macros);
+    return o;
+}
