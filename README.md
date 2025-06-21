@@ -104,6 +104,22 @@ instead of `dx8gles11_compile_file()`. The string is consumed as-is with no
 
 A reference executor (`examples/replay_runtime.c`) is planned for v0.2.
 
+## Tools
+
+### Usage coverage script
+
+To gauge how many DirectX opcodes are currently recognised by the translator,
+use the helper script under `tools/usage_coverage.py`.  Pass it a text report
+listing each opcode and an optional usage count:
+
+```bash
+$ python tools/usage_coverage.py my_report.txt
+```
+
+Any opcode string found inside `src/` is treated as implemented and a short
+coverage summary is printed. The script also writes a Markdown table to
+`COVERAGE.md` showing the per-opcode status.
+
 ---
 
 ## Roadmap
