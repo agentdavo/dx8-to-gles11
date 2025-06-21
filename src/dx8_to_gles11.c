@@ -87,6 +87,11 @@ Opcode translators – extend as needed.
 --------------------------------------------------------------------------------*/
 static void xlate(const asm_instr *i, GLES_CommandList *o) {
     if (!strcmp(i->opcode, "mov") && !strcmp(i->dst, "oPos")) {
+        if (dx8gles11_has_extension("GL_OES_vertex_buffer_object")) {
+            gles_cmd b = {.type = GLES_CMD_BIND_VBO};
+            b.u[0] = 0;
+            cl_push(o, b);
+        }
         gles_cmd c = {.type = GLES_CMD_VERTEX_ATTRIB};
         c.u[0] = 0;
         cl_push(o, c);

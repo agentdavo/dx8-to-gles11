@@ -39,6 +39,22 @@ static void execute_cmds(const GLES_CommandList *cl) {
             glClientActiveTexture(c->u[0]);
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
             break;
+        case GLES_CMD_BIND_VBO:
+            if (!dx8gles11_has_extension("GL_OES_vertex_buffer_object")) {
+                fprintf(stderr, "%s\n", dx8gles11_error());
+                return;
+            }
+            glBindBuffer(GL_ARRAY_BUFFER, c->u[0]);
+            break;
+        case GLES_CMD_VERTEX_ATTRIB:
+            if (c->u[0] == 0) {
+                glEnableClientState(GL_VERTEX_ARRAY);
+                glVertexPointer(3, GL_FLOAT, 0, 0);
+            } else if (c->u[0] == 1) {
+                glEnableClientState(GL_COLOR_ARRAY);
+                glColorPointer(4, GL_UNSIGNED_BYTE, 0, 0);
+            }
+            break;
         case GLES_CMD_MATRIX_MODE:
             glMatrixMode(c->u[0]);
             /* glLoadMatrixf(MVP); — app supplies */
