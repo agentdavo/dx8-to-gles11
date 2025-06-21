@@ -6,12 +6,19 @@ typedef struct asm_instr {
     char opcode[8], dst[32], src0[32], src1[32], src2[32];
 } asm_instr;
 
+typedef enum asm_shader_type {
+    ASM_SHADER_NONE,
+    ASM_SHADER_PS11,
+    ASM_SHADER_VS11
+} asm_shader_type;
+
 typedef struct asm_constant {
-    unsigned idx;     /* cN register index */
+    unsigned idx; /* cN register index */
     float value[4];
 } asm_constant;
 
 typedef struct asm_program {
+    asm_shader_type type;
     asm_instr *code;
     size_t count, capacity;
     asm_constant *consts;

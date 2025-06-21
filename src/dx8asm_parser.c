@@ -19,6 +19,7 @@ int asm_parse(const char *src, asm_program *prog, char **err) {
     prog->consts = NULL;
     prog->count = prog->capacity = 0;
     prog->const_count = prog->const_capacity = 0;
+    prog->type = ASM_SHADER_NONE;
 
     size_t line = 1;
     const char *cur = src;
@@ -49,7 +50,13 @@ int asm_parse(const char *src, asm_program *prog, char **err) {
             continue; /* comment or blank line */
         }
 
-        if (!strcmp(trim, "ps.1.1") || !strcmp(trim, "vs.1.1")) {
+        if (!strcmp(trim, "ps.1.1")) {
+            prog->type = ASM_SHADER_PS11;
+            free(buf);
+            continue;
+        }
+        if (!strcmp(trim, "vs.1.1")) {
+            prog->type = ASM_SHADER_VS11;
             free(buf);
             continue;
         }
