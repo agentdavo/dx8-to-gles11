@@ -137,6 +137,19 @@ exceeding shader limits triggers an error via `dx8gles11_error()`.
 The sample runtime under `examples/replay_runtime.c` now shows how to bind a VBO
 and enable vertex arrays.
 
+## Runtime pipeline
+
+For higher throughput you can process shaders with the optional multi-threaded pipeline. It splits work into three stages:
+
+1. **Decode** – parse the DX8 assembly into `asm_instr` objects.
+2. **Prepare** – convert each instruction into `gles_cmd` entries via `translate_instr()`.
+3. **Dispatch** – execute the resulting commands on the GL driver.
+
+Use `pipeline_init(&p, threads)` and `pipeline_start(&p)` to begin processing. When done, call `pipeline_stop(&p)` followed by `pipeline_join(&p)`. The helper `pipeline_commands_per_second()` reports approximate throughput.
+
+See `examples/replay_runtime.c` for a usage example.
+
+
 ## Tools
 
 ### Usage coverage script
