@@ -263,6 +263,25 @@ static void xlate(const asm_instr *i, GLES_CommandList *o) {
         gles_cmd c = {.type = GLES_CMD_TEX_SAMPLE};
         c.u[0] = stage;
         cl_push(o, c);
+        if (strstr(i->comment, "volume") || strstr(i->dst, "volume") ||
+            strstr(i->src0, "volume") || strstr(i->src1, "volume") ||
+            strstr(i->src2, "volume")) {
+            gles_cmd v = {.type = GLES_CMD_TEX_IMAGE_3D};
+            v.u[0] = stage;
+            cl_push(o, v);
+        } else if (strstr(i->comment, "shadow") || strstr(i->dst, "shadow") ||
+                   strstr(i->src0, "shadow") || strstr(i->src1, "shadow") ||
+                   strstr(i->src2, "shadow")) {
+            gles_cmd v = {.type = GLES_CMD_TEX_IMAGE_DEPTH};
+            v.u[0] = stage;
+            cl_push(o, v);
+        } else if (strstr(i->comment, "npot") || strstr(i->dst, "npot") ||
+                   strstr(i->src0, "npot") || strstr(i->src1, "npot") ||
+                   strstr(i->src2, "npot")) {
+            gles_cmd v = {.type = GLES_CMD_TEX_IMAGE_2D};
+            v.u[0] = stage;
+            cl_push(o, v);
+        }
         return;
     }
 
@@ -276,6 +295,25 @@ static void xlate(const asm_instr *i, GLES_CommandList *o) {
         gles_cmd c = {.type = GLES_CMD_TEX_LOAD};
         c.u[0] = stage;
         cl_push(o, c);
+        if (strstr(i->comment, "volume") || strstr(i->dst, "volume") ||
+            strstr(i->src0, "volume") || strstr(i->src1, "volume") ||
+            strstr(i->src2, "volume")) {
+            gles_cmd v = {.type = GLES_CMD_TEX_IMAGE_3D};
+            v.u[0] = stage;
+            cl_push(o, v);
+        } else if (strstr(i->comment, "shadow") || strstr(i->dst, "shadow") ||
+                   strstr(i->src0, "shadow") || strstr(i->src1, "shadow") ||
+                   strstr(i->src2, "shadow")) {
+            gles_cmd v = {.type = GLES_CMD_TEX_IMAGE_DEPTH};
+            v.u[0] = stage;
+            cl_push(o, v);
+        } else if (strstr(i->comment, "npot") || strstr(i->dst, "npot") ||
+                   strstr(i->src0, "npot") || strstr(i->src1, "npot") ||
+                   strstr(i->src2, "npot")) {
+            gles_cmd v = {.type = GLES_CMD_TEX_IMAGE_2D};
+            v.u[0] = stage;
+            cl_push(o, v);
+        }
         return;
     }
 

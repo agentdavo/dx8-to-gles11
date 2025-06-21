@@ -33,6 +33,9 @@ typedef enum gles_cmd_type {
     GLES_CMD_TEX_LOAD,
     GLES_CMD_TEX_COORD_COPY,
     GLES_CMD_TEX_KILL,
+    GLES_CMD_TEX_IMAGE_2D,
+    GLES_CMD_TEX_IMAGE_3D,
+    GLES_CMD_TEX_IMAGE_DEPTH,
     /*
      * Emitted when the translator encounters an unsupported opcode or
      * invalid operand. For example, "mov oT8, r0" produces this command and
