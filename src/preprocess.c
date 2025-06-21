@@ -88,7 +88,7 @@ static char *path_dir(const char *path) {
 }
 
 static char *process(const char *src_path, const char *src, const char *inc_dir, const char *cur_dir,
-                     macro *macros, char **err) {
+                     macro **macros, char **err) {
     char *out = NULL;
     size_t out_len = 0;
     const char *cur = src;
@@ -163,10 +163,10 @@ static char *process(const char *src_path, const char *src, const char *inc_dir,
                 trim = skip_ws(trim);
                 char *val = util_strdup(trim);
                 macro m = {name, val};
-                sb_push(macros, m);
+                sb_push(*macros, m);
             }
         } else {
-            char *exp = subst_macros(line, macros);
+            char *exp = subst_macros(line, *macros);
             size_t l = strlen(exp);
             char *tmp = realloc(out, out_len + l + 2);
             if (!tmp) {
@@ -185,6 +185,8 @@ static char *process(const char *src_path, const char *src, const char *inc_dir,
         }
         free(line);
     }
+    if (!out)
+        out = util_strdup("");
     return out;
 }
 char *pp_run(const char *src_p, const char *inc_dir, char **err) {
@@ -195,7 +197,7 @@ char *pp_run(const char *src_p, const char *inc_dir, char **err) {
     }
     char *dir = path_dir(src_p);
     macro *macros = NULL;
-    char *o = process(src_p, s, inc_dir, dir, macros, err);
+    char *o = process(src_p, s, inc_dir, dir, &macros, err);
     macros_free(macros);
     free(dir);
     free(s);
@@ -209,7 +211,7 @@ char *pp_run_string(const char *src, const char *inc_dir, char **err) {
         return NULL;
     }
     macro *macros = NULL;
-    char *o = process(NULL, src, inc_dir, NULL, macros, err);
+    char *o = process(NULL, src, inc_dir, NULL, &macros, err);
     macros_free(macros);
     return o;
 }

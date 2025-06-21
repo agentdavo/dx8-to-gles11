@@ -23,3 +23,21 @@ foreach(f mov_tex mul_const dp3_matrix add matrix_ops tex_ops terrain_ps motion_
                               ${CMAKE_CURRENT_SOURCE_DIR}/expected/${f}.txt
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endforeach()
+
+add_executable(test_compile_string test_compile_string.c)
+target_link_libraries(test_compile_string dx8gles11)
+add_test(NAME compile_string_vs
+    COMMAND test_compile_string ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/compile_string_vs.asm
+                                ${CMAKE_CURRENT_SOURCE_DIR}/expected/compile_string_vs.txt
+                                ${CMAKE_CURRENT_SOURCE_DIR}/fixtures
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME compile_string_ps
+    COMMAND test_compile_string ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/compile_string_ps.asm
+                                ${CMAKE_CURRENT_SOURCE_DIR}/expected/compile_string_ps.txt
+                                ${CMAKE_CURRENT_SOURCE_DIR}/fixtures
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_executable(test_compile_limits test_compile_limits.c)
+target_link_libraries(test_compile_limits dx8gles11)
+add_test(NAME compile_limits COMMAND test_compile_limits
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})

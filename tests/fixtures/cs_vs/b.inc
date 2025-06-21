@@ -1,0 +1,2 @@
+MOVOP oPos, POS
+MOVOP oT0, TEX

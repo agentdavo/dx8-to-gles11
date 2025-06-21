@@ -1,0 +1,2 @@
+tex TEX
+MODOP r0, DIFF, TEX
