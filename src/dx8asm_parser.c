@@ -49,6 +49,11 @@ int asm_parse(const char *src, asm_program *prog, char **err) {
             continue; /* comment or blank line */
         }
 
+        if (!strcmp(trim, "ps.1.1") || !strcmp(trim, "vs.1.1")) {
+            free(buf);
+            continue;
+        }
+
         if (!strncmp(trim, "def", 3)) {
             asm_constant c = {0};
             if (sscanf(trim, "def c%u, %f, %f, %f, %f", &c.idx, &c.value[0],
@@ -66,8 +71,8 @@ int asm_parse(const char *src, asm_program *prog, char **err) {
         }
 
         asm_instr inst = {0};
-        char operands[96] = "";
-        if (sscanf(trim, "%7s%95[^\n]", inst.opcode, operands) < 1) {
+        char operands[128] = "";
+        if (sscanf(trim, "%7s%127[^\n]", inst.opcode, operands) < 1) {
             if (err)
                 util_asprintf(err, "line %zu: invalid instruction: %s",
                               line - 1, trim);
@@ -127,15 +132,30 @@ int asm_parse(const char *src, asm_program *prog, char **err) {
                     }
                     strncpy(inst.src1, tok, sizeof(inst.src1) - 1);
 
-                    if (strtok_r(NULL, ",", &save)) {
-                        if (err)
-                            util_asprintf(
-                                err,
-                                "line %zu: invalid instruction: %s",
-                                line - 1, trim);
-                        free(buf);
-                        asm_program_free(prog);
-                        return -1;
+                    tok = strtok_r(NULL, ",", &save);
+                    if (tok) {
+                        tok = trim_ws(tok);
+                        if (strchr(tok, ' ') || strchr(tok, '\t')) {
+                            if (err)
+                                util_asprintf(err,
+                                              "line %zu: invalid instruction: %s",
+                                              line - 1, trim);
+                            free(buf);
+                            asm_program_free(prog);
+                            return -1;
+                        }
+                        strncpy(inst.src2, tok, sizeof(inst.src2) - 1);
+
+                        if (strtok_r(NULL, ",", &save)) {
+                            if (err)
+                                util_asprintf(
+                                    err,
+                                    "line %zu: invalid instruction: %s",
+                                    line - 1, trim);
+                            free(buf);
+                            asm_program_free(prog);
+                            return -1;
+                        }
                     }
                 }
             }

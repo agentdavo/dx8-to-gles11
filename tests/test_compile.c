@@ -47,6 +47,21 @@ static char *dump_cmds(const GLES_CommandList *cl) {
         case GLES_CMD_TEX_ENV_COMBINE:
             util_asprintf(&line, "TEX_ENV_COMBINE func=%u\n", c->u[1]);
             break;
+        case GLES_CMD_TEX_SAMPLE:
+            util_asprintf(&line, "TEX_SAMPLE stage=%u\n", c->u[0]);
+            break;
+        case GLES_CMD_TEX_LOAD:
+            util_asprintf(&line, "TEX_LOAD stage=%u\n", c->u[0]);
+            break;
+        case GLES_CMD_TEX_COORD_COPY:
+            util_asprintf(&line, "TEX_COORD_COPY\n");
+            break;
+        case GLES_CMD_TEX_KILL:
+            util_asprintf(&line, "TEX_KILL\n");
+            break;
+        case GLES_CMD_VERTEX_ATTRIB:
+            util_asprintf(&line, "VERTEX_ATTRIB idx=%u\n", c->u[0]);
+            break;
         case GLES_CMD_MATRIX_MODE:
             util_asprintf(&line, "MATRIX_MODE mode=%u\n", c->u[0]);
             break;
