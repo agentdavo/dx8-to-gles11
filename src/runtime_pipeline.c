@@ -1,4 +1,7 @@
 #include "runtime_pipeline.h"
+#include "dx8asm_parser.h"
+#include "utils.h"
+#include <threads.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,6 +10,38 @@
 static _Thread_local char g_err[256] = "";
 /* per-thread counter tracking active pipeline starts */
 static _Thread_local unsigned g_started = 0;
+
+typedef struct decode_ctx {
+    lf_queue *decode_q;
+    lf_queue *prepare_q;
+    asm_instr *buffer;
+} decode_ctx;
+
+static void decode_worker(void *arg) {
+    decode_ctx *ctx = arg;
+    for (;;) {
+        char *src = lf_queue_pop(ctx->decode_q);
+        if (!src) {
+            if (!g_started)
+                break;
+            thrd_yield();
+            continue;
+        }
+
+        asm_program prog = {0};
+        char *err = NULL;
+        if (asm_parse(src, &prog, &err) == 0) {
+            for (size_t i = 0; i < prog.count; ++i) {
+                sb_push(ctx->buffer, prog.code[i]);
+                asm_instr *in = &ctx->buffer[sb_count(ctx->buffer) - 1];
+                lf_queue_push(ctx->prepare_q, in);
+            }
+        }
+        free(err);
+        asm_program_free(&prog);
+    }
+    sb_free(ctx->buffer);
+}
 
 static void set_err(const char *fmt, ...) {
     va_list ap;
