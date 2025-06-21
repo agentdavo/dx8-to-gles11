@@ -21,6 +21,7 @@ A **tiny C‑11 static library** that ingests legacy **DirectX 8 shaders**, run
 | Matrix load / MVP            | ✅      | Emits `GLES_CMD_MATRIX_MODE` + runtime load. |
 | Multi‑texture coords         | ✅      | `mov oTn, …` → `glClientActiveTexture`. |
 | Error API                    | ✅      | `dx8gles11_error()` returns last human string. |
+| Shader profile validation    | ✅      | Exceeding ps.1.1 or vs.1.1 limits fails compilation. |
 | Command‑list heap            | ✅      | Stretchy‑buffer; no external deps. |
 | Build system                 | ✅      | Portable **CMake ≥ 3.16**. |
 | Optimisation pass            | ⬜️      | Planned (dead code / constant folding). |
@@ -101,6 +102,9 @@ gles_cmdlist_free(&cl);
 If the assembly text is already in memory, call `dx8gles11_compile_string()`
 instead of `dx8gles11_compile_file()`. The string is preprocessed first so
 `#define` and `#include` directives work the same as with file input.
+
+Both compile functions run the same preprocessor. Missing `#include` files or
+exceeding shader limits triggers an error via `dx8gles11_error()`.
 
 A reference executor (`examples/replay_runtime.c`) is planned for v0.2.
 
