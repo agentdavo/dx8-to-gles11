@@ -38,6 +38,7 @@ add_library(dx8gles11 STATIC
     src/dx8_to_gles11.c
     src/utils.c
     src/lf_queue.c
+    src/runtime_pipeline.c
 )
 
 target_include_directories(dx8gles11 PUBLIC
