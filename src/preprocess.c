@@ -69,7 +69,7 @@ static char *subst_macros(const char *line, macro *macros) {
         }
     }
     if (!out) {
-        out = strdup("");
+        out = util_strdup("");
     } else {
         out[out_len] = '\0';
     }
@@ -83,7 +83,7 @@ static char *path_dir(const char *path) {
         slash = bslash;
 #endif
     if (!slash)
-        return strdup(".");
+        return util_strdup(".");
     return util_strndup(path, (size_t)(slash - path));
 }
 
@@ -160,7 +160,7 @@ static char *process(const char *src_path, const char *src, const char *inc_dir,
                     ++trim;
                 char *name = util_strndup(ns, trim - ns);
                 trim = skip_ws(trim);
-                char *val = strdup(trim);
+                char *val = util_strdup(trim);
                 macro m = {name, val};
                 sb_push(macros, m);
             }
@@ -189,7 +189,7 @@ static char *process(const char *src_path, const char *src, const char *inc_dir,
 char *pp_run(const char *src_p, const char *inc_dir, char **err) {
     char *s = read_file(src_p);
     if (!s) {
-        *err = strdup("Could not read source file");
+        *err = util_strdup("Could not read source file");
         return NULL;
     }
     char *dir = path_dir(src_p);

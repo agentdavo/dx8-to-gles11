@@ -15,6 +15,8 @@ char *util_strndup(const char *s, size_t n) {
     return out;
 }
 
+char *util_strdup(const char *s) { return util_strndup(s, strlen(s)); }
+
 int util_vasprintf(char **out, const char *fmt, va_list ap) {
     va_list ap2;
     va_copy(ap2, ap);
