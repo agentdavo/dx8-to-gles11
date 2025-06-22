@@ -166,6 +166,19 @@ Any opcode string found inside `src/` is treated as implemented and a short
 coverage summary is printed. The script also writes a Markdown table to
 `COVERAGE.md` showing the per-opcode status.
 
+### Bench tests
+
+The helper program `bench_tests` builds when `BUILD_BENCHMARKS` is enabled.
+It repeatedly compiles the shader fixtures under `tests/fixtures` and
+prints the throughput in OpenGL command list entries per second.  Run it
+from the build directory:
+
+```bash
+$ ./bench_tests ../tests/fixtures 100000
+```
+
+The second argument controls the number of iterations (default is 100000).
+
 ---
 
 ## Roadmap
