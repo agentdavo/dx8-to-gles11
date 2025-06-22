@@ -145,7 +145,7 @@ For higher throughput you can process shaders with the optional multi-threaded p
 2. **Prepare** – convert each instruction into `gles_cmd` entries via `translate_instr()`.
 3. **Dispatch** – execute the resulting commands on the GL driver.
 
-Use `pipeline_init(&p, threads)` and `pipeline_start(&p)` to begin processing. When done, call `pipeline_stop(&p)` followed by `pipeline_join(&p)`. The helper `pipeline_commands_per_second()` reports approximate throughput.
+Use `pipeline_init_stages(&p, decode, prepare, dispatch)` to control the number of worker threads per stage or call the legacy `pipeline_init(&p, dispatch)` for a simple setup. After initialisation call `pipeline_start(&p)` to begin processing. When done, call `pipeline_stop(&p)` followed by `pipeline_join(&p)`. The helper `pipeline_commands_per_second()` reports approximate throughput.
 
 See `examples/replay_runtime.c` for a usage example.
 
@@ -178,6 +178,11 @@ $ ./bench_tests ../tests/fixtures 100000
 ```
 
 The second argument controls the number of iterations (default is 100000).
+
+To profile the runtime pipeline with different thread counts use
+`tools/gen_thruput.py`.  The script searches multiple decode/prepare/dispatch
+thread combinations, runs the best setup for one million iterations and writes
+the results plus host information to `THRUPUT.md`.
 
 ---
 

@@ -4,6 +4,7 @@
 #include "utils.h"
 #include <threads.h>
 #include <stdarg.h>
+#include <stdalign.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +22,7 @@
 /* translator provided by dx8_to_gles11.c */
 extern void translate_instr(const asm_instr *restrict, GLES_CommandList *restrict);
 
-static _Thread_local char g_err[256] = "";
+static alignas(64) _Thread_local char g_err[256] = "";
 /* per-thread counter tracking active pipeline starts */
 static _Thread_local unsigned g_started = 0;
 
@@ -220,8 +221,8 @@ static void set_err(const char *fmt, ...) {
     va_end(ap);
 }
 
-/* initialize a pipeline; applications typically use 2-4 threads */
-int pipeline_init(pipeline *p, int num_threads) {
+static int pipeline_init_internal(pipeline *p, int decode_threads,
+                                 int prepare_threads, int dispatch_threads) {
     if (!p)
         return -1;
     if (lf_queue_init(&p->decode_q) || lf_queue_init(&p->prepare_q) ||
@@ -232,12 +233,24 @@ int pipeline_init(pipeline *p, int num_threads) {
         lf_queue_destroy(&p->dispatch_q);
         return -1;
     }
-    if (num_threads < PIPELINE_MIN_THREADS)
-        num_threads = PIPELINE_MIN_THREADS;
-    if (num_threads > PIPELINE_MAX_THREADS)
-        num_threads = PIPELINE_MAX_THREADS;
-    p->num_threads = num_threads;
-    p->stats = calloc((size_t)p->num_threads, sizeof(*p->stats));
+
+    if (decode_threads < PIPELINE_MIN_THREADS)
+        decode_threads = PIPELINE_MIN_THREADS;
+    if (prepare_threads < PIPELINE_MIN_THREADS)
+        prepare_threads = PIPELINE_MIN_THREADS;
+    if (dispatch_threads < PIPELINE_MIN_THREADS)
+        dispatch_threads = PIPELINE_MIN_THREADS;
+    if (dispatch_threads > PIPELINE_MAX_THREADS)
+        dispatch_threads = PIPELINE_MAX_THREADS;
+
+    p->decode_threads = decode_threads;
+    p->prepare_threads = prepare_threads;
+    p->num_threads = dispatch_threads;
+
+    size_t stats_sz = (size_t)p->num_threads * sizeof(*p->stats);
+    p->stats = aligned_alloc(64, stats_sz);
+    if (p->stats)
+        memset(p->stats, 0, stats_sz);
     if (!p->stats) {
         set_err("stats alloc failed");
         lf_queue_destroy(&p->decode_q);
@@ -245,7 +258,9 @@ int pipeline_init(pipeline *p, int num_threads) {
         lf_queue_destroy(&p->dispatch_q);
         return -1;
     }
-    if (mt_pool_init(&p->workers, p->num_threads)) {
+
+    int total_threads = p->decode_threads + p->prepare_threads + p->num_threads;
+    if (mt_pool_init(&p->workers, total_threads)) {
         set_err("thread pool init failed");
         free(p->stats);
         lf_queue_destroy(&p->decode_q);
@@ -256,39 +271,58 @@ int pipeline_init(pipeline *p, int num_threads) {
     return 0;
 }
 
+/* initialize a pipeline; applications typically use 2-4 threads */
+int pipeline_init(pipeline *p, int num_threads) {
+    return pipeline_init_internal(p, 1, 1, num_threads);
+}
+
+int pipeline_init_stages(pipeline *p, int decode_threads, int prepare_threads,
+                         int dispatch_threads) {
+    return pipeline_init_internal(p, decode_threads, prepare_threads,
+                                 dispatch_threads);
+}
+
 int pipeline_start(pipeline *p) {
     if (!p)
         return -1;
 
-    decode_ctx *dctx = calloc(1, sizeof(*dctx));
-    prepare_ctx *pct = calloc(1, sizeof(*pct));
-    if (!dctx || !pct) {
-        free(dctx);
-        free(pct);
-        set_err("ctx alloc failed");
-        return -1;
-    }
-
+    decode_ctx **dctx = calloc((size_t)p->decode_threads, sizeof(*dctx));
+    prepare_ctx **pct = calloc((size_t)p->prepare_threads, sizeof(*pct));
     dispatch_ctx **dispatch = calloc((size_t)p->num_threads, sizeof(*dispatch));
-    if (!dispatch) {
-        free(dctx);
-        free(pct);
-        set_err("ctx alloc failed");
-        return -1;
-    }
-
-    dctx->decode_q = &p->decode_q;
-    dctx->prepare_q = &p->prepare_q;
-    pct->prepare_q = &p->prepare_q;
-    pct->dispatch_q = &p->dispatch_q;
-
-    if (mt_pool_submit(&p->workers, decode_worker, dctx) ||
-        mt_pool_submit(&p->workers, prepare_worker, pct)) {
+    if (!dctx || !pct || !dispatch) {
         free(dctx);
         free(pct);
         free(dispatch);
-        set_err("submit failed");
+        set_err("ctx alloc failed");
         return -1;
+    }
+
+    for (int i = 0; i < p->decode_threads; ++i) {
+        dctx[i] = calloc(1, sizeof(**dctx));
+        if (!dctx[i]) {
+            set_err("ctx alloc failed");
+            return -1;
+        }
+        dctx[i]->decode_q = &p->decode_q;
+        dctx[i]->prepare_q = &p->prepare_q;
+        if (mt_pool_submit(&p->workers, decode_worker, dctx[i])) {
+            set_err("submit failed");
+            return -1;
+        }
+    }
+
+    for (int i = 0; i < p->prepare_threads; ++i) {
+        pct[i] = calloc(1, sizeof(**pct));
+        if (!pct[i]) {
+            set_err("ctx alloc failed");
+            return -1;
+        }
+        pct[i]->prepare_q = &p->prepare_q;
+        pct[i]->dispatch_q = &p->dispatch_q;
+        if (mt_pool_submit(&p->workers, prepare_worker, pct[i])) {
+            set_err("submit failed");
+            return -1;
+        }
     }
 
     for (int i = 0; i < p->num_threads; ++i) {
@@ -306,6 +340,8 @@ int pipeline_start(pipeline *p) {
     }
 
     free(dispatch);
+    free(pct);
+    free(dctx);
     g_started++;
     return 0;
 }
@@ -336,8 +372,7 @@ double pipeline_commands_per_second(const pipeline *p) {
     double cps = 0.0;
     for (int i = 0; i < p->num_threads; ++i) {
         const pipeline_stats *s = &p->stats[i];
-        double elapsed = (now.tv_sec - s->start.tv_sec) +
-                         (now.tv_nsec - s->start.tv_nsec) / 1e9;
+        double elapsed = TS_DIFF(&s->start, &now);
         if (elapsed > 0.0)
             cps += s->commands / elapsed;
     }
