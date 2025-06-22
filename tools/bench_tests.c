@@ -1,4 +1,5 @@
 #include "dx8gles11.h"
+#include "runtime_pipeline.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,6 +30,16 @@ static char *read_file(const char *path) {
 int main(int argc, char **argv) {
     const char *dir = argc > 1 ? argv[1] : "../tests/fixtures";
     int iters = argc > 2 ? atoi(argv[2]) : 100000;
+    int stage1 = 1, stage2 = 1, stage3 = 2;
+    for (int i = 3; i < argc; ++i) {
+        if (strcmp(argv[i], "-stage1") == 0 && i + 1 < argc) {
+            stage1 = atoi(argv[++i]);
+        } else if (strcmp(argv[i], "-stage2") == 0 && i + 1 < argc) {
+            stage2 = atoi(argv[++i]);
+        } else if (strcmp(argv[i], "-stage3") == 0 && i + 1 < argc) {
+            stage3 = atoi(argv[++i]);
+        }
+    }
 
     const char *shaders[] = {
         "mov_tex",
@@ -61,20 +72,33 @@ int main(int argc, char **argv) {
             fprintf(stderr, "failed to read %s\n", path);
             continue;
         }
-        struct timespec s, e;
-        clock_gettime(CLOCK_MONOTONIC, &s);
-        size_t cmds = 0;
-        for (int j = 0; j < iters; ++j) {
-            GLES_CommandList cl;
-            if (dx8gles11_compile_string(src, NULL, &cl) == 0) {
-                cmds += cl.count;
-                gles_cmdlist_free(&cl);
-            }
+        GLES_CommandList tmp;
+        if (dx8gles11_compile_string(src, NULL, &tmp) != 0) {
+            fprintf(stderr, "compile failed: %s\n", dx8gles11_error());
+            free(src);
+            continue;
         }
+        size_t cmd_count = tmp.count;
+        gles_cmdlist_free(&tmp);
+
+        struct timespec s, e;
+        pipeline p;
+        clock_gettime(CLOCK_MONOTONIC, &s);
+        if (pipeline_init_stages(&p, stage1, stage2, stage3) || pipeline_start(&p)) {
+            fprintf(stderr, "pipeline init failed\n");
+            free(src);
+            continue;
+        }
+        for (int j = 0; j < iters; ++j)
+            lf_queue_push(&p.decode_q, src);
+        pipeline_stop(&p);
+        double cps = pipeline_commands_per_second(&p);
+        pipeline_join(&p);
         clock_gettime(CLOCK_MONOTONIC, &e);
-        double elapsed = (e.tv_sec - s.tv_sec) +
-                         (e.tv_nsec - s.tv_nsec) / 1e9;
-        double cps = elapsed > 0.0 ? cmds / elapsed : 0.0;
+        double elapsed = TS_DIFF(&s, &e);
+        size_t cmds = cmd_count * (size_t)iters;
+        if (elapsed > 0.0)
+            cps = cmds / elapsed;
         printf("%s: %.2f cmds/s\n", shaders[i], cps);
         total_cmds += cmds;
         total_time += elapsed;

@@ -161,7 +161,7 @@ int main(int argc, char **argv) {
     }
 
     pipeline p;
-    if (pipeline_init(&p, threads) || pipeline_start(&p)) {
+    if (pipeline_init_stages(&p, 1, 1, threads) || pipeline_start(&p)) {
         fprintf(stderr, "pipeline init failed\n");
         free(src);
         return 1;
